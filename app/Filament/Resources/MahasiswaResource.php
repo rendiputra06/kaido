@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\MahasiswaResource\Pages;
 use App\Filament\Resources\MahasiswaResource\RelationManagers;
 use App\Models\Mahasiswa;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,13 +16,31 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 use Filament\Tables\Filters\SelectFilter;
 
-class MahasiswaResource extends Resource
+class MahasiswaResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Mahasiswa::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
 
     protected static ?string $navigationGroup = 'Pengguna';
+    
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+        ];
+    }
 
     public static function form(Form $form): Form
     {

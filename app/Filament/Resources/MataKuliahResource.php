@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\MataKuliahResource\Pages;
 use App\Filament\Resources\MataKuliahResource\RelationManagers;
 use App\Models\MataKuliah;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,13 +16,31 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 use Filament\Tables\Filters\SelectFilter;
 
-class MataKuliahResource extends Resource
+class MataKuliahResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = MataKuliah::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
     protected static ?string $navigationGroup = 'Akademik';
+    
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+        ];
+    }
 
     public static function form(Form $form): Form
     {

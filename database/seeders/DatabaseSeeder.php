@@ -27,6 +27,15 @@ class DatabaseSeeder extends Seeder
                 BookSeeder::class,
                 PostSeeder::class,
                 ContactSeeder::class,
+
+                // siakad seeder
+                ProgramStudiSeeder::class,
+                MataKuliahSeeder::class,
+                TahunAjaranSeeder::class,
+                KurikulumSeeder::class,
+                UserSeeder::class,
+                MahasiswaSeeder::class,
+                DosenSeeder::class,
             ]
         );
     }
