@@ -3,27 +3,44 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PeriodeKrsResource\Pages;
-use App\Filament\Resources\PeriodeKrsResource\RelationManagers;
 use App\Models\PeriodeKrs;
+use App\Models\TahunAjaran;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PeriodeKrsResource extends Resource
 {
     protected static ?string $model = PeriodeKrs::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    protected static ?string $navigationGroup = 'Akademik';
+    protected static ?string $modelLabel = 'Periode KRS';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                //
+                Forms\Components\Select::make('tahun_ajaran_id')
+                    ->label('Tahun Ajaran')
+                    ->options(TahunAjaran::all()->pluck('nama', 'id'))
+                    ->searchable()
+                    ->required(),
+                Forms\Components\DatePicker::make('tgl_mulai')
+                    ->required(),
+                Forms\Components\DatePicker::make('tgl_selesai')
+                    ->required()
+                    ->after('tgl_mulai'),
+                Forms\Components\Select::make('status')
+                    ->options([
+                        'aktif' => 'Aktif',
+                        'tidak_aktif' => 'Tidak Aktif',
+                        'selesai' => 'Selesai',
+                    ])
+                    ->required()
+                    ->default('tidak_aktif'),
             ]);
     }
 
@@ -31,15 +48,51 @@ class PeriodeKrsResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('tahunAjaran.nama')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('tgl_mulai')
+                    ->date('d M Y')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('tgl_selesai')
+                    ->date('d M Y')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'tidak_aktif' => 'gray',
+                        'aktif' => 'success',
+                        'selesai' => 'warning',
+                    }),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'aktif' => 'Aktif',
+                        'tidak_aktif' => 'Tidak Aktif',
+                        'selesai' => 'Selesai',
+                    ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('toggleStatus')
+                    ->label(fn (PeriodeKrs $record): string => $record->status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan')
+                    ->icon('heroicon-o-check-circle')
+                    ->color(fn (PeriodeKrs $record): string => $record->status === 'aktif' ? 'danger' : 'success')
+                    ->requiresConfirmation()
+                    ->action(function (PeriodeKrs $record) {
+                        if ($record->status === 'aktif') {
+                            $record->update(['status' => 'tidak_aktif']);
+                        } else {
+                            // Pastikan hanya ada satu periode aktif dalam satu waktu
+                            PeriodeKrs::where('status', 'aktif')->update(['status' => 'tidak_aktif']);
+                            $record->update(['status' => 'aktif']);
+                        }
+                    }),
                 Tables\Actions\EditAction::make(),
-   Tables\Actions\DeleteAction::make(),
-
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -68,16 +68,16 @@ Berikut adalah daftar tugas yang telah disempurnakan untuk implementasi Fase 2 d
 
 ### Hari 1-2: Setup Model dan Struktur Dasar
 
-- [ ] **Database & Migrations**
-  - [ ] Membuat migrasi untuk tabel `periode_krs` (`tahun_ajaran_id`, tgl_mulai, tgl_selesai, status).
-  - [ ] Membuat migrasi untuk tabel `krs_mahasiswas` (`mahasiswa_id`, `periode_krs_id`, `dosen_pa_id`, status, total_sks, catatan_pa).
-  - [ ] Membuat migrasi untuk tabel `krs_details` (`krs_mahasiswa_id`, `kelas_id`).
-- [ ] **Models & Relations**
-  - [ ] Membuat model `PeriodeKrs` dengan relasi ke `TahunAjaran`.
-  - [ ] Membuat model `KrsMahasiswa` dengan relasi ke `Mahasiswa`, `PeriodeKrs`, `Dosen`, dan `hasMany(KrsDetail)`.
-  - [ ] Membuat model `KrsDetail` dengan relasi ke `KrsMahasiswa` dan `Kelas`.
-- [ ] **Data Seeder**
-  - [ ] Membuat `PeriodeKrsSeeder` untuk data awal.
+- [x] **Database & Migrations**
+  - [x] Membuat migrasi untuk tabel `periode_krs` (`tahun_ajaran_id`, tgl_mulai, tgl_selesai, status).
+  - [x] Membuat migrasi untuk tabel `krs_mahasiswas` (`mahasiswa_id`, `periode_krs_id`, `dosen_pa_id`, status, total_sks, catatan_pa).
+  - [x] Membuat migrasi untuk tabel `krs_details` (`krs_mahasiswa_id`, `kelas_id`).
+- [x] **Models & Relations**
+  - [x] Membuat model `PeriodeKrs` dengan relasi ke `TahunAjaran`.
+  - [x] Membuat model `KrsMahasiswa` dengan relasi ke `Mahasiswa`, `PeriodeKrs`, `Dosen`, dan `hasMany(KrsDetail)`.
+  - [x] Membuat model `KrsDetail` dengan relasi ke `KrsMahasiswa` dan `Kelas`.
+- [x] **Data Seeder**
+  - [x] Membuat `PeriodeKrsSeeder` untuk data awal.
 - [ ] **Service & Repository Layer**
   - [ ] Membuat `KrsRepositoryInterface` & `KrsRepository`.
   - [ ] Membuat `PeriodeKrsRepositoryInterface` & `PeriodeKrsRepository`.
@@ -88,7 +88,7 @@ Berikut adalah daftar tugas yang telah disempurnakan untuk implementasi Fase 2 d
 
 ### Hari 3-4: Implementasi Antarmuka KRS Mahasiswa
 
-- [ ] **Filament Resource: `PeriodeKrs`**
+- [x] **Filament Resource: `PeriodeKrs`**
   - [ ] Form untuk create/edit periode KRS.
   - [ ] Aksi untuk aktivasi/deaktivasi periode.
 - [ ] **Halaman Pengisian KRS (Custom Filament Page untuk Mahasiswa)**

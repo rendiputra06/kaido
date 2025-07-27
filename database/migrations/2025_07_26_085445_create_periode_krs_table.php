@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('periode_krs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tahun_ajaran_id')->constrained('tahun_ajarans')->cascadeOnDelete();
+            $table->date('tgl_mulai');
+            $table->date('tgl_selesai');
+            $table->enum('status', ['aktif', 'tidak_aktif', 'selesai'])->default('tidak_aktif');
             $table->timestamps();
         });
     }
