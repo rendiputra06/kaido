@@ -17,9 +17,12 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class ProgramStudiResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = ProgramStudi::class;
-
+    protected static ?string $navigationGroup = 'Data Master';
+    protected static ?string $title = 'Program Studi';
+    protected static ?string $navigationLabel = 'Program Studi';
+    protected static ?string $pluralModelLabel = 'Program Studi';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    
+
     public static function getPermissionPrefixes(): array
     {
         return [
@@ -80,7 +83,7 @@ class ProgramStudiResource extends Resource implements HasShieldPermissions
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-   Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make(),
 
             ])
             ->bulkActions([

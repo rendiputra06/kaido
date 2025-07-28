@@ -13,14 +13,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Membuat user admin utama
-        User::factory()->create([
-            'name' => 'admin',
-            'email' => 'admin@admin.com',
-        ]);
         // $this->call([
-        //     BookSeeder::class,
-        //     PostSeeder::class,
+            //     BookSeeder::class,
+            //     PostSeeder::class,
         //     ContactSeeder::class,
         //     ProgramStudiSeeder::class,
         //     MataKuliahSeeder::class,
@@ -32,6 +27,18 @@ class DatabaseSeeder extends Seeder
         //     RuangKuliahSeeder::class,
         // );
         // Memanggil seeder utama untuk satu semester berjalan
-        $this->call(SemesterAktifSeeder::class);
+        $this->call([
+            ShieldSeeder::class,
+            UserRoleSeeder::class,
+            UserSeeder::class,
+            SemesterAktifSeeder::class,
+            PeriodeKrsSeeder::class,
+        ]);
+        // Membuat user admin utama
+        $admin = User::factory()->create([
+            'name' => 'admin',
+            'email' => 'admin@admin.com',
+        ]);
+        $admin->assignRole('super_admin');
     }
 }

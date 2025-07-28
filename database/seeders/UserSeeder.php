@@ -14,34 +14,36 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Admin user
-        User::create([
-            'name' => 'Admin SIAKAD',
-            'email' => 'admin@siakad.ac.id',
-            'password' => Hash::make('password'),
-        ]);
-        
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@siakad.ac.id'],
+            [
+                'name' => 'Admin SIAKAD',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+        $admin->assignRole('super_admin');
+
         // Users untuk dosen
         $dosenNames = [
             'Dr. Ahmad Fauzi',
             'Prof. Siti Rahayu',
             'Dr. Budi Santoso',
             'Ir. Dewi Kartika',
-            'Dr. Hendra Wijaya',
-            'Prof. Rina Anggraini',
-            'Dr. Bambang Supriyanto',
-            'Dra. Lina Susanti',
-            'Dr. Agus Purnomo',
-            'Prof. Maya Indah',
         ];
-        
+
         foreach ($dosenNames as $index => $name) {
-            User::create([
-                'name' => $name,
-                'email' => 'dosen' . ($index + 1) . '@siakad.ac.id',
-                'password' => Hash::make('password'),
-            ]);
+            $dosen = User::firstOrCreate(
+                ['email' => 'dosen' . ($index + 1) . '@siakad.ac.id'],
+                [
+                    'name' => $name,
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                ]
+            );
+            $dosen->assignRole('dosen');
         }
-        
+
         // Users untuk mahasiswa
         $mahasiswaNames = [
             'Ahmad Rizki',
@@ -60,13 +62,17 @@ class UserSeeder extends Seeder
             'Galih Ramadhan',
             'Hani Safitri',
         ];
-        
+
         foreach ($mahasiswaNames as $index => $name) {
-            User::create([
-                'name' => $name,
-                'email' => 'mhs' . ($index + 1) . '@student.siakad.ac.id',
-                'password' => Hash::make('password'),
-            ]);
+            $mahasiswa = User::firstOrCreate(
+                ['email' => 'mhs' . ($index + 1) . '@student.siakad.ac.id'],
+                [
+                    'name' => $name,
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                ]
+            );
+            $mahasiswa->assignRole('mahasiswa');
         }
     }
 }

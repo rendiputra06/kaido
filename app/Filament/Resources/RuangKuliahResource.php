@@ -19,7 +19,11 @@ class RuangKuliahResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
-    protected static ?string $navigationGroup = 'Akademik';
+    protected static ?string $navigationGroup = 'Data Master';
+    protected static ?string $title = 'Ruangan';
+    protected static ?string $navigationLabel = 'Ruangan';
+    protected static ?string $pluralModelLabel = 'Ruangan';
+
 
     public static function form(Form $form): Form
     {

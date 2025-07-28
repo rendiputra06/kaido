@@ -27,7 +27,7 @@ use Filament\Infolists\Components\Section as InfolistSection;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
-
+    protected static ?string $navigationGroup = 'Settings';
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     public static function form(Form $form): Form

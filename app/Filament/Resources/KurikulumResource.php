@@ -22,8 +22,11 @@ class KurikulumResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $navigationGroup = 'Akademik';
-    
+    protected static ?string $navigationGroup = 'Data Master';
+    protected static ?string $title = 'Kurikulum';
+    protected static ?string $navigationLabel = 'Kurikulum';
+    protected static ?string $pluralModelLabel = 'Kurikulum';
+
     public static function getPermissionPrefixes(): array
     {
         return [
@@ -78,7 +81,7 @@ class KurikulumResource extends Resource implements HasShieldPermissions
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-   Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make(),
 
             ])
             ->bulkActions([

@@ -22,8 +22,11 @@ class MahasiswaResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static ?string $navigationGroup = 'Pengguna';
-    
+    protected static ?string $navigationGroup = 'Civitas';
+    protected static ?string $title = 'Mahasiswa';
+    protected static ?string $navigationLabel = 'Mahasiswa';
+    protected static ?string $pluralModelLabel = 'Mahasiswa';
+
     public static function getPermissionPrefixes(): array
     {
         return [
@@ -102,7 +105,7 @@ class MahasiswaResource extends Resource implements HasShieldPermissions
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-   Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make(),
 
             ])
             ->bulkActions([

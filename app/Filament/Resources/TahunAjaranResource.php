@@ -22,8 +22,11 @@ class TahunAjaranResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static ?string $navigationGroup = 'Akademik';
-    
+    protected static ?string $navigationGroup = 'Data Master';
+    protected static ?string $title = 'Tahun Ajaran';
+    protected static ?string $navigationLabel = 'Tahun Ajaran';
+    protected static ?string $pluralModelLabel = 'Tahun Ajaran';
+
     public static function getPermissionPrefixes(): array
     {
         return [
@@ -82,7 +85,7 @@ class TahunAjaranResource extends Resource implements HasShieldPermissions
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-   Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make(),
 
             ])
             ->bulkActions([

@@ -28,9 +28,15 @@ class PeriodeKrsResource extends Resource
                     ->options(TahunAjaran::all()->pluck('nama', 'id'))
                     ->searchable()
                     ->required(),
+                Forms\Components\TextInput::make('nama_periode')
+                    ->label('Nama Periode')
+                    ->required()
+                    ->maxLength(255),
                 Forms\Components\DatePicker::make('tgl_mulai')
+                    ->label('Tanggal Mulai')
                     ->required(),
                 Forms\Components\DatePicker::make('tgl_selesai')
+                    ->label('Tanggal Selesai')
                     ->required()
                     ->after('tgl_mulai'),
                 Forms\Components\Select::make('status')
@@ -41,6 +47,9 @@ class PeriodeKrsResource extends Resource
                     ])
                     ->required()
                     ->default('tidak_aktif'),
+                Forms\Components\Textarea::make('keterangan')
+                    ->label('Keterangan')
+                    ->rows(3),
             ]);
     }
 
@@ -48,18 +57,25 @@ class PeriodeKrsResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('nama_periode')
+                    ->label('Nama Periode')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('tahunAjaran.nama')
+                    ->label('Tahun Ajaran')
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('tgl_mulai')
+                    ->label('Tanggal Mulai')
                     ->date('d M Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('tgl_selesai')
+                    ->label('Tanggal Selesai')
                     ->date('d M Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'tidak_aktif' => 'gray',
                         'aktif' => 'success',
                         'selesai' => 'warning',
@@ -79,9 +95,9 @@ class PeriodeKrsResource extends Resource
             ])
             ->actions([
                 Tables\Actions\Action::make('toggleStatus')
-                    ->label(fn (PeriodeKrs $record): string => $record->status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan')
+                    ->label(fn(PeriodeKrs $record): string => $record->status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan')
                     ->icon('heroicon-o-check-circle')
-                    ->color(fn (PeriodeKrs $record): string => $record->status === 'aktif' ? 'danger' : 'success')
+                    ->color(fn(PeriodeKrs $record): string => $record->status === 'aktif' ? 'danger' : 'success')
                     ->requiresConfirmation()
                     ->action(function (PeriodeKrs $record) {
                         if ($record->status === 'aktif') {

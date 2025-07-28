@@ -22,8 +22,11 @@ class DosenResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
 
-    protected static ?string $navigationGroup = 'Pengguna';
-    
+    protected static ?string $navigationGroup = 'Civitas';
+    protected static ?string $navigationLabel = 'Dosen';
+    protected static ?string $title = 'Dosen';
+    protected static ?string $pluralModelLabel = 'Dosen';
+
     public static function getPermissionPrefixes(): array
     {
         return [

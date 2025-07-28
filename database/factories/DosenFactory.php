@@ -19,9 +19,9 @@ class DosenFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'nidn' => $this->faker->unique()->numerify('##########'),
+            'nidn' => $this->faker->unique()->numerify('########'),
             'nama' => $this->faker->name(),
-            'jabatan_fungsional' => null,
+            'jabatan_fungsional' => $this->faker->randomElement(['Lektor', 'Lektor Kepala', 'Guru Besar', 'Asisten Ahli']),
             'foto' => null,
         ];
     }
