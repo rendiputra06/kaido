@@ -174,4 +174,21 @@ class KrsRepository implements KrsRepositoryInterface
             ->join('mata_kuliahs', 'kelas.mata_kuliah_id', '=', 'mata_kuliahs.id')
             ->sum('mata_kuliahs.sks');
     }
+    
+    /**
+     * Reset status KRS menjadi draft
+     *
+     * @param KrsMahasiswa $krs
+     * @return KrsMahasiswa
+     */
+    public function resetKrsStatus(KrsMahasiswa $krs): KrsMahasiswa
+    {
+        $krs->update([
+            'status' => 'draft',
+            'tanggal_submit' => null,
+            'tanggal_approval' => null,
+        ]);
+        
+        return $krs;
+    }
 }

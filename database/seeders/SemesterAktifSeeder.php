@@ -5,7 +5,12 @@ namespace Database\Seeders;
 use App\Models\Dosen;
 use App\Models\JadwalKuliah;
 use App\Models\Kelas;
+use App\Models\KrsDetail;
+use App\Models\KrsMahasiswa;
+use App\Models\Kurikulum;
+use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
+use App\Models\PeriodeKrs;
 use App\Models\ProgramStudi;
 use App\Models\RuangKuliah;
 use App\Models\TahunAjaran;
@@ -16,100 +21,109 @@ class SemesterAktifSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
-        // Nonaktifkan pengecekan foreign key untuk truncate
-        // DB::statement('SET FOREIGN_KEY_CHECKS=0;'); // Uncomment if using MySQL
-        DB::statement('PRAGMA foreign_keys = OFF;'); // Uncomment if using SQLite
+        DB::transaction(function () {
+            // 1. Program Studi
+            $prodi = ProgramStudi::factory()->create(['nama_prodi' => 'Ekonomi Islam', 'kode_prodi' => 'EI']);
 
-        // 1. Bersihkan data lama untuk memastikan lingkungan yang bersih
-        JadwalKuliah::truncate();
-        Kelas::truncate();
-        MataKuliah::truncate();
-        ProgramStudi::truncate();
-        TahunAjaran::truncate();
-        RuangKuliah::truncate();
-        Dosen::truncate();
-        // User yang terkait dengan dosen juga bisa di-truncate jika perlu
-        // DB::table('users')->where('role', 'dosen')->delete();
+            // 2. Kurikulum
+            $kurikulum = Kurikulum::factory()->create(['nama_kurikulum' => 'Kurikulum 2024', 'tahun_mulai' => 2024, 'program_studi_id' => $prodi->id]);
 
+            // 3. Ruang Kuliah
+            $ruangan = RuangKuliah::factory(5)->create();
 
-        // 2. Buat satu Tahun Ajaran yang aktif
-        $this->command->info('Membuat Tahun Ajaran aktif...');
-        $tahunAjaran = TahunAjaran::factory()->create([
-            'nama' => 'Tahun Ajaran 2024/2025 Ganjil',
-            'is_active' => true,
-        ]);
+            // 4. Dosen
+            $dosens = Dosen::factory(3)->create();
 
-        // 3. Buat data master
-        $this->command->info('Membuat data master (Ruangan, Prodi, Dosen)...');
-        $ruangan = RuangKuliah::factory()->count(5)->create();
-        $prodiTI = ProgramStudi::factory()->create(['nama_prodi' => 'Teknik Informatika', 'kode_prodi' => 'TI']);
-        $prodiSI = ProgramStudi::factory()->create(['nama_prodi' => 'Ekonomi Islam', 'kode_prodi' => 'SI']);
-        $dosens = Dosen::factory()->count(10)->create();
+            // 5. Mahasiswa
+            $mahasiswas = Mahasiswa::factory(20)->create(['program_studi_id' => $prodi->id]);
 
-        // 4. Buat Mata Kuliah
-        $this->command->info('Membuat Mata Kuliah...');
-        $matkulTI = MataKuliah::factory()->count(10)->create(['program_studi_id' => $prodiTI->id]);
-        $matkulSI = MataKuliah::factory()->count(8)->create(['program_studi_id' => $prodiSI->id]);
-
-        // 5. Buka Kelas untuk semester aktif
-        $this->command->info('Membuka kelas...');
-        $kelasDibuka = new \Illuminate\Database\Eloquent\Collection();
-        foreach ($matkulTI->concat($matkulSI) as $matkul) {
-            // Buka 1 atau 2 kelas untuk setiap matkul
-            for ($i = 0; $i < rand(1, 2); $i++) {
-                $kelas = Kelas::factory()->create([
-                    'mata_kuliah_id' => $matkul->id,
-                    'tahun_ajaran_id' => $tahunAjaran->id,
-                    'dosen_id' => $dosens->random()->id,
-                    'nama' => chr(65 + $i), // Kelas A, B
-                ]);
-                $kelasDibuka->add($kelas);
+            // 5.1. Penetapan Dosen PA
+            $dosenChunks = $dosens->pluck('id');
+            $mahasiswaChunks = $mahasiswas->split(count($dosenChunks));
+            
+            foreach ($mahasiswaChunks as $index => $chunk) {
+                Mahasiswa::whereIn('id', $chunk->pluck('id'))->update(['dosen_pa_id' => $dosenChunks[$index]]);
             }
-        }
+            
+            // Refresh data mahasiswa setelah diupdate
+            $mahasiswas = Mahasiswa::all();
 
-        // 6. Buat Jadwal Kuliah (dengan logika anti-bentrok sederhana)
-        $this->command->info('Membuat jadwal kuliah...');
-        $jadwalDibuat = []; // [hari][jam_mulai][ruang_id] = true
-        $hariKuliah = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-        $jamKuliah = ['08:00:00', '10:15:00', '13:00:00', '15:15:00'];
+            // 6. Tahun Ajaran & Periode KRS Aktif
+            $tahunAjaran = TahunAjaran::factory()->create(['nama' => '2024/2025']);
+            $periodeKrs = PeriodeKrs::factory()->create([
+                'nama_periode' => 'Ganjil 2024/2025',
+                'tahun_ajaran_id' => $tahunAjaran->id,
+                'status' => 'aktif',
+                'tgl_mulai' => now()->toDateString(),
+                'tgl_selesai' => now()->addMonths(4)->toDateString(),
+            ]);
 
-        foreach ($kelasDibuka as $kelas) {
-            $jadwalBerhasilDibuat = false;
-            $maxTries = 20; // Mencegah infinite loop
-            $tryCount = 0;
+            // 7. Mata Kuliah
+            $mataKuliahs = MataKuliah::factory(5)->create([
+                'kurikulum_id' => $kurikulum->id,
+                'program_studi_id' => $prodi->id,
+            ]);
 
-            while (!$jadwalBerhasilDibuat && $tryCount < $maxTries) {
-                $hari = $hariKuliah[array_rand($hariKuliah)];
-                $jamMulai = $jamKuliah[array_rand($jamKuliah)];
-                $ruang = $ruangan->random();
+            // 8. Kelas & Jadwal
+            $kelasList = collect();
+            foreach ($mataKuliahs as $mk) {
+                $kelas = Kelas::factory()->create([
+                    'mata_kuliah_id' => $mk->id,
+                    'dosen_id' => $dosens->random()->id,
+                    'tahun_ajaran_id' => $tahunAjaran->id,
+                    'kuota' => 50,
+                ]);
 
-                // Cek apakah slot ruangan sudah terisi
-                if (!isset($jadwalDibuat[$hari][$jamMulai][$ruang->id])) {
+                // Buat 1 atau 2 jadwal untuk setiap kelas
+                $jumlahJadwal = rand(1, 2);
+                for ($i = 0; $i < $jumlahJadwal; $i++) {
                     JadwalKuliah::factory()->create([
                         'kelas_id' => $kelas->id,
-                        'ruang_kuliah_id' => $ruang->id,
-                        'hari' => $hari,
-                        'jam_mulai' => $jamMulai,
-                        'jam_selesai' => date('H:i:s', strtotime($jamMulai) + (50 * 3 * 60)), // Asumsi 3 SKS = 150 menit
+                        'ruang_kuliah_id' => $ruangan->random()->id,
                     ]);
-
-                    // Tandai slot sebagai terisi
-                    $jadwalDibuat[$hari][$jamMulai][$ruang->id] = true;
-                    $jadwalBerhasilDibuat = true;
                 }
-                $tryCount++;
+                $kelasList->push($kelas);
             }
-        }
 
-        // Aktifkan kembali pengecekan foreign key
-        DB::statement('PRAGMA foreign_keys = ON;'); // Uncomment if using SQLite
-        // DB::statement('SET FOREIGN_KEY_CHECKS=1;'); // Uncomment if using MySQL
+            // 9. Simulasi Pengisian KRS
+            foreach ($mahasiswas as $mahasiswa) {
+                // Pastikan mahasiswa punya Dosen PA
+                if (!$mahasiswa->dosen_pa_id) {
+                    continue;
+                }
 
-        $this->command->info('Seeder Semester Aktif berhasil dijalankan!');
+                // Buat KRS Mahasiswa
+                $krs = KrsMahasiswa::factory()->create([
+                    'mahasiswa_id' => $mahasiswa->id,
+                    'periode_krs_id' => $periodeKrs->id,
+                    'dosen_pa_id' => $mahasiswa->dosen_pa_id, // Ambil dari data mahasiswa
+                    'status' => 'draft', // Status awal
+                    'total_sks' => 0,
+                    'max_sks' => 24,
+                ]);
+
+                // Ambil 3-5 kelas secara acak
+                $jumlahMkDiambil = rand(3, 5);
+                $kelasDiambil = $kelasList->random($jumlahMkDiambil);
+                $totalSks = 0;
+
+                foreach ($kelasDiambil as $kelas) {
+                    // Tambahkan ke KRS Detail
+                    KrsDetail::factory()->create([
+                        'krs_mahasiswa_id' => $krs->id,
+                        'kelas_id' => $kelas->id,
+                        'status' => 'active',
+                    ]);
+                    // Akumulasi SKS
+                    $totalSks += $kelas->mataKuliah->sks;
+                }
+
+                // Update total SKS di KrsMahasiswa
+                $krs->update(['total_sks' => $totalSks]);
+            }
+        });
     }
 }

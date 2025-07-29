@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('mata_kuliahs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('program_studi_id')->constrained();
+            $table->foreignId('kurikulum_id')->nullable()->constrained()->onDelete('set null');
             $table->string('kode_mk')->unique();
             $table->string('nama_mk');
             $table->integer('sks');

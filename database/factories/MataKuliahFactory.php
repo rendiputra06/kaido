@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\ProgramStudi;
+use App\Models\Kurikulum;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,6 +20,7 @@ class MataKuliahFactory extends Factory
     {
         return [
             'program_studi_id' => ProgramStudi::factory(),
+            'kurikulum_id' => Kurikulum::factory(),
             'kode_mk' => $this->faker->unique()->lexify('MK-???'),
             'nama_mk' => 'Matkul ' . $this->faker->unique()->word,
             'sks' => $this->faker->randomElement([2, 3, 4]),

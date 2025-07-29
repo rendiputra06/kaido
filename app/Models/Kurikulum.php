@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kurikulum extends Model
 {
@@ -18,8 +18,8 @@ class Kurikulum extends Model
         return $this->belongsTo(ProgramStudi::class);
     }
 
-    public function mataKuliahs(): BelongsToMany
+    public function mataKuliahs(): HasMany
     {
-        return $this->belongsToMany(MataKuliah::class, 'kurikulum_matakuliah');
+        return $this->hasMany(MataKuliah::class);
     }
 }

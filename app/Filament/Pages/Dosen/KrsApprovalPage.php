@@ -6,6 +6,7 @@ use Filament\Pages\Page;
 use App\Interfaces\KrsRepositoryInterface;
 use App\Models\KrsMahasiswa;
 use App\Services\KrsService;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -14,6 +15,9 @@ use Livewire\Attributes\On;
 
 class KrsApprovalPage extends Page
 {
+    use HasPageShield;
+    
+    protected static string $permissionName = 'krs_approval_page';
     protected static ?string $navigationIcon = 'heroicon-o-check-circle';
     protected static string $view = 'filament.pages.dosen.krs-approval-page';
     protected static ?string $title = 'KRS Mahasiswa';
@@ -27,11 +31,6 @@ class KrsApprovalPage extends Page
 
     public function mount(): void
     {
-        // Cek apakah user adalah dosen
-        if (!Auth::user()->hasRole('dosen')) {
-            abort(403, 'Akses ditolak. Hanya dosen yang dapat mengakses halaman ini.');
-        }
-
         $this->loadKrsList();
     }
 

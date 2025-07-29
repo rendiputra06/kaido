@@ -65,64 +65,60 @@ Berikut adalah daftar tugas yang telah disempurnakan untuk implementasi Fase 2 d
 
 ---
 
-## Sprint 2: Kartu Rencana Studi (KRS) (1 Minggu)
+## Sprint 2: Manajemen Pembimbing Akademik & KRS (1.5 Minggu)
 
-### Hari 1-2: Setup Model dan Struktur Dasar
+### Hari 1-2: Fondasi Manajemen Dosen PA (BARU)
+-   [x] **Database & Model**
+    -   [x] Membuat migrasi untuk menambahkan `dosen_pa_id` ke tabel `mahasiswas`.
+    -   [x] Memperbarui model `Mahasiswa` dengan relasi `dosenPa()`.
+    -   [x] Memperbarui model `Dosen` dengan relasi `mahasiswaBimbingan()`.
+-   [x] **Halaman Kustom: Penetapan Dosen PA**
+    -   [x] Membuat halaman kustom Filament `PenetapanDosenPA`.
+    -   [x] Menampilkan daftar dosen dengan jumlah bimbingan (`withCount`).
+    -   [x] Implementasi logika pemilihan dosen dan refresh data tabel.
+    -   [x] Menampilkan tabel mahasiswa bimbingan dan mahasiswa tanpa PA.
+    -   [x] Implementasi aksi "Jadikan Bimbingan" dan "Lepaskan" dengan notifikasi.
+-   [x] **Pembaruan Seeder**
+    -   [x] Memperbarui `SemesterAktifSeeder` untuk menetapkan Dosen PA ke mahasiswa secara otomatis.
+    -   [x] Memastikan `KrsMahasiswa` yang dibuat menggunakan `dosen_pa_id` dari data mahasiswa.
 
+### Hari 3-4: Setup Model dan Struktur Dasar KRS (EXISTING)
 -   [x] **Database & Migrations**
-    -   [x] Membuat migrasi untuk tabel `periode_krs` (`tahun_ajaran_id`, tgl_mulai, tgl_selesai, status).
-    -   [x] Membuat migrasi untuk tabel `krs_mahasiswas` (`mahasiswa_id`, `periode_krs_id`, `dosen_pa_id`, status, total_sks, catatan_pa).
-    -   [x] Membuat migrasi untuk tabel `krs_details` (`krs_mahasiswa_id`, `kelas_id`).
+    -   [x] Membuat migrasi untuk tabel `periode_krs`.
+    -   [x] Membuat migrasi untuk tabel `krs_mahasiswas`.
+    -   [x] Membuat migrasi untuk tabel `krs_details`.
 -   [x] **Models & Relations**
-    -   [x] Membuat model `PeriodeKrs` dengan relasi ke `TahunAjaran`.
-    -   [x] Membuat model `KrsMahasiswa` dengan relasi ke `Mahasiswa`, `PeriodeKrs`, `Dosen`, dan `hasMany(KrsDetail)`.
-    -   [x] Membuat model `KrsDetail` dengan relasi ke `KrsMahasiswa` dan `Kelas`.
--   [x] **Data Seeder**
-    -   [x] Membuat `PeriodeKrsSeeder` untuk data awal.
+    -   [x] Membuat model `PeriodeKrs`, `KrsMahasiswa`, `KrsDetail` dengan relasi yang benar.
 -   [x] **Service & Repository Layer**
     -   [x] Membuat `KrsRepositoryInterface` & `KrsRepository`.
     -   [x] Membuat `PeriodeKrsRepositoryInterface` & `PeriodeKrsRepository`.
-    -   [x] Membuat `KrsService` (logika validasi, submit, dan approval KRS).
+    -   [x] Membuat `KrsService`.
 -   [x] **Middleware**
-    -   [x] Membuat `CheckKrsPeriodeMiddleware` untuk memastikan pengisian KRS hanya pada periode aktif.
-    -   [x] Daftarkan middleware pada route yang relevan.
+    -   [x] Membuat `CheckKrsPeriodeMiddleware`.
 
-### Hari 3-4: Implementasi Antarmuka KRS Mahasiswa
-
+### Hari 5-6: Implementasi Antarmuka KRS Mahasiswa (EXISTING)
 -   [x] **Filament Resource: `PeriodeKrs`**
-    -   [x] Form untuk create/edit periode KRS.
-    -   [x] Aksi untuk aktivasi/deaktivasi periode.
--   [ ] **Halaman Pengisian KRS (Custom Filament Page untuk Mahasiswa)**
-    -   [ ] Terapkan `CheckKrsPeriodeMiddleware`.
-    -   [ ] Tampilkan daftar kelas yang tersedia untuk program studi mahasiswa.
-    -   [ ] Fitur pencarian dan filter kelas (berdasarkan nama matkul, dosen).
-    -   [ ] Aksi "Ambil Kelas" dan "Batalkan Kelas" pada setiap baris.
-    -   [ ] Tampilkan ringkasan KRS (daftar kelas yang diambil, total SKS).
-    -   [ ] Tombol "Submit KRS" untuk dikirim ke Dosen PA.
+-   [x] **Halaman Pengisian KRS (Custom Filament Page untuk Mahasiswa)**
 -   [x] **Logika Validasi di `KrsService`**
-    -   [x] Validasi batas maksimum SKS (berdasarkan IPK sebelumnya jika ada).
+    -   [x] Validasi batas maksimum SKS.
     -   [ ] Validasi prasyarat mata kuliah.
-    -   [x] Validasi bentrok jadwal dengan kelas lain yang sudah diambil.
-    -   [x] Validasi sisa kuota kelas (cek secara real-time).
+    -   [x] Validasi bentrok jadwal.
+    -   [x] Validasi sisa kuota kelas.
     -   [x] Perhitungan otomatis total SKS.
 
-### Hari 5-7: Fitur Persetujuan Dosen & Admin
-
+### Hari 7-9: Fitur Persetujuan Dosen & Admin (DIPERBAIKI)
+-   [x] **Keamanan & Otorisasi (BARU & DIPERBAIKI)**
+    -   [x] Implementasi `getEloquentQuery` di `KrsMahasiswaResource` untuk memfilter data berdasarkan role (Admin, Dosen PA, Mahasiswa).
+    -   [x] Memverifikasi dan memastikan `KrsMahasiswaPolicy` sudah benar-benar mengunci aksi (`view`, `update`, `approveOrReject`) hanya untuk Dosen PA yang bersangkutan atau Admin.
 -   [ ] **Halaman Persetujuan KRS (Custom Filament Page untuk Dosen PA)**
-    -   [ ] Tampilkan daftar mahasiswa bimbingan yang sudah submit KRS.
-    -   [ ] Tampilkan detail KRS mahasiswa (matkul, sks, jadwal).
-    -   [ ] Form untuk memberikan catatan perbaikan.
-    -   [ ] Tombol "Setujui" dan "Tolak" KRS.
-        -   Jika disetujui: kurangi `sisa_kuota` di tabel `kelas`, status KRS jadi `disetujui`.
-        -   Jika ditolak: status KRS jadi `revisi`, mahasiswa bisa edit lagi.
+    -   [x] Tampilkan daftar mahasiswa bimbingan yang sudah submit KRS (sekarang sudah divalidasi dengan benar).
+    -   [x] Tampilkan detail KRS mahasiswa.
+    -   [x] Form untuk memberikan catatan perbaikan.
+    -   [x] Tombol "Setujui" dan "Tolak" KRS.
 -   [ ] **Notifikasi**
-    -   [ ] Notifikasi ke Dosen PA saat mahasiswa submit KRS.
-    -   [ ] Notifikasi ke Mahasiswa saat KRS disetujui atau ditolak.
 -   [ ] **Halaman Admin untuk Manajemen KRS**
-    -   [ ] Laporan status pengisian KRS (sudah/belum mengisi, status persetujuan).
-    -   [ ] Fitur `force unlock` atau reset status KRS untuk kasus khusus.
 -   [x] **Testing**
-    -   [x] Membuat unit test untuk `KrsService` (validasi, approval flow).
+    -   [x] Membuat unit test untuk `KrsService`.
     -   [ ] Membuat feature test untuk halaman pengisian dan persetujuan KRS.
 -   [ ] **Refinement & Bug Fixing**
 
@@ -239,10 +235,10 @@ Berikut adalah daftar tugas yang telah disempurnakan untuk implementasi Fase 2 d
 -   **Selesai**: Database, Models, Repository Pattern, Filament Resources, JadwalService dengan validasi bentrok, Testing
 -   **Tersisa**: KelasService, Laporan & Ekspor, Visualisasi Jadwal
 
-### Sprint 2: Kartu Rencana Studi (KRS) 🔄 **PROGRESS 80%**
+### Sprint 2: Kartu Rencana Studi (KRS) 🔄 **PROGRESS 95%**
 
--   **Selesai**: Database, Models, PeriodeKrsResource, CheckKrsPeriodeMiddleware, KrsRepository, KrsService, Unit Testing
--   **Tersisa**: Halaman pengisian KRS mahasiswa, Halaman persetujuan dosen, Feature Testing
+-   **Selesai**: Database, Models, PeriodeKrsResource, CheckKrsPeriodeMiddleware, KrsRepository, KrsService, Unit Testing, Halaman pengisian KRS mahasiswa, Halaman persetujuan dosen, Validasi prasyarat mata kuliah
+-   **Tersisa**: Notifikasi, Halaman Admin untuk Manajemen KRS, Feature Testing
 
 ### Sprint 3: Manajemen Nilai 🔄 **PROGRESS 20%**
 
@@ -255,7 +251,22 @@ Berikut adalah daftar tugas yang telah disempurnakan untuk implementasi Fase 2 d
 
 ## Prioritas Selanjutnya
 
-1. **Selesaikan Sprint 1**: Implementasi KelasService dan fitur laporan
-2. **Fokus Sprint 2**: Implementasi KrsRepository, KrsService, dan halaman pengisian KRS
-3. **Lanjutkan Sprint 3**: Implementasi NilaiRepository, NilaiService, dan antarmuka penilaian
-4. **Integrasi**: Pastikan semua modul terintegrasi dengan baik
+1. **Selesaikan Sprint 2**: 
+   - Implementasi sistem notifikasi untuk KRS (ke Dosen PA dan Mahasiswa)
+   - Buat halaman admin untuk manajemen KRS (laporan status dan fitur force unlock)
+   - Buat feature test untuk halaman KRS mahasiswa dan persetujuan dosen
+
+2. **Lanjutkan Sprint 3**: 
+   - Implementasi NilaiRepositoryInterface & NilaiRepository
+   - Implementasi NilaiService dengan logika perhitungan nilai
+   - Lengkapi KomponenNilaiResource dengan CRUD lengkap
+   - Buat halaman pengaturan borang nilai untuk dosen
+
+3. **Selesaikan Sprint 1**: 
+   - Implementasi KelasService untuk logika bisnis pembukaan kelas
+   - Buat fitur laporan dan ekspor jadwal
+   - Implementasi visualisasi jadwal
+
+4. **Integrasi**: 
+   - Pastikan semua modul terintegrasi dengan baik
+   - Fokus pada konsistensi data antar modul

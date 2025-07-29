@@ -8,6 +8,7 @@ use App\Interfaces\PeriodeKrsRepositoryInterface;
 use App\Models\Kelas;
 use App\Models\KrsMahasiswa;
 use App\Services\KrsService;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -16,6 +17,9 @@ use Livewire\Attributes\On;
 
 class KrsPage extends Page
 {
+    use HasPageShield;
+    
+    protected static string $permissionName = 'krs_page';
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
     protected static string $view = 'filament.pages.mahasiswa.krs-page';
     protected static ?string $title = 'Kartu Rencana Studi';
@@ -31,11 +35,6 @@ class KrsPage extends Page
 
     public function mount(): void
     {
-        // Cek apakah user adalah mahasiswa
-        if (!Auth::user()->hasRole('mahasiswa')) {
-            abort(403, 'Akses ditolak. Hanya mahasiswa yang dapat mengakses halaman ini.');
-        }
-
         $this->loadKrsData();
     }
 

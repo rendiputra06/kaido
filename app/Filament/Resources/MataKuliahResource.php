@@ -49,6 +49,11 @@ class MataKuliahResource extends Resource implements HasShieldPermissions
                 Forms\Components\Select::make('program_studi_id')
                     ->relationship('programStudi', 'nama_prodi')
                     ->required(),
+                Forms\Components\Select::make('kurikulum_id')
+                    ->relationship('kurikulum', 'nama_kurikulum')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
                 Forms\Components\TextInput::make('kode_mk')
                     ->required()
                     ->unique(ignoreRecord: true)
@@ -70,6 +75,7 @@ class MataKuliahResource extends Resource implements HasShieldPermissions
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('programStudi.nama_prodi')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('kurikulum.nama_kurikulum')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('kode_mk')->searchable(),
                 Tables\Columns\TextColumn::make('nama_mk')->searchable(),
                 Tables\Columns\TextColumn::make('sks'),
@@ -95,7 +101,8 @@ class MataKuliahResource extends Resource implements HasShieldPermissions
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\PrerequisitesRelationManager::class,
+            RelationManagers\AdvancedCoursesRelationManager::class,
         ];
     }
 

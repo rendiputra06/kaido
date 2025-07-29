@@ -13,32 +13,35 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([
-            //     BookSeeder::class,
-            //     PostSeeder::class,
-        //     ContactSeeder::class,
-        //     ProgramStudiSeeder::class,
-        //     MataKuliahSeeder::class,
-        //     TahunAjaranSeeder::class,
-        //     KurikulumSeeder::class,
-        //     UserSeeder::class,
-        //     MahasiswaSeeder::class,
-        //     DosenSeeder::class,
-        //     RuangKuliahSeeder::class,
-        // );
         // Memanggil seeder utama untuk satu semester berjalan
         $this->call([
             ShieldSeeder::class,
-            UserRoleSeeder::class,
-            UserSeeder::class,
+            // UserRoleSeeder::class, // User role bisa di-handle oleh seeder utama jika perlu
             SemesterAktifSeeder::class,
-            PeriodeKrsSeeder::class,
+            // Seeder di bawah ini tidak perlu dipanggil lagi karena sudah dicakup oleh SemesterAktifSeeder
+            // PeriodeKrsSeeder::class, 
+            // MataKuliahPrerequisiteSeeder::class,
         ]);
+
         // Membuat user admin utama
         $admin = User::factory()->create([
             'name' => 'admin',
             'email' => 'admin@admin.com',
         ]);
         $admin->assignRole('super_admin');
+
+        // Membuat user mahasiswa untuk testing
+        $mahasiswaUser = User::factory()->create([
+            'name' => 'mahasiswa',
+            'email' => 'mahasiswa@test.com',
+        ]);
+        $mahasiswaUser->assignRole('mahasiswa');
+
+        // Membuat user dosen untuk testing
+        $dosenUser = User::factory()->create([
+            'name' => 'dosen',
+            'email' => 'dosen@test.com',
+        ]);
+        $dosenUser->assignRole('dosen');
     }
 }

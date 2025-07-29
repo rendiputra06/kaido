@@ -21,4 +21,9 @@ class Mahasiswa extends Model
     {
         return $this->belongsTo(ProgramStudi::class);
     }
+
+    public function dosenPa(): BelongsTo
+    {
+        return $this->belongsTo(Dosen::class, 'dosen_pa_id');
+    }
 }

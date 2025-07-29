@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Interfaces\KrsRepositoryInterface;
+use App\Interfaces\KrsServiceInterface;
 use App\Interfaces\PeriodeKrsRepositoryInterface;
 use App\Interfaces\JadwalServiceInterface;
 use App\Models\KrsMahasiswa;
@@ -10,7 +11,7 @@ use App\Models\KrsDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class KrsService
+class KrsService implements KrsServiceInterface
 {
     protected KrsRepositoryInterface $krsRepository;
     protected PeriodeKrsRepositoryInterface $periodeRepository;
@@ -74,6 +75,9 @@ class KrsService
 
         // Validasi SKS maksimum
         $this->validateMaxSks($krsId, $kelasId);
+        
+        // Validasi prasyarat mata kuliah
+        $this->validatePrerequisites($krs->mahasiswa_id, $kelasId);
 
         // Tambahkan detail KRS
         $krsDetail = $this->krsRepository->addKrsDetail($krsId, $kelasId);
@@ -219,6 +223,43 @@ class KrsService
 
         return $krs;
     }
+    
+    /**
+     * Reset status KRS menjadi draft
+     * 
+     * Fungsi ini digunakan oleh admin untuk mereset status KRS dalam kasus khusus
+     * seperti kesalahan persetujuan atau kebutuhan revisi setelah KRS disubmit/diapprove
+     */
+    public function resetKrsStatus(int $krsId): KrsMahasiswa
+    {
+        $krs = $this->krsRepository->getKrsById($krsId);
+        if (!$krs) {
+            throw new \Exception('KRS tidak ditemukan');
+        }
+
+        // Hanya bisa reset jika status bukan draft
+        if ($krs->isDraft()) {
+            throw new \Exception('KRS sudah berstatus draft');
+        }
+
+        // Catat status sebelumnya untuk log
+        $previousStatus = $krs->status;
+
+        // Update status KRS menjadi draft
+        $updatedKrs = $this->krsRepository->updateKrs($krsId, [
+            'status' => 'draft',
+            'tanggal_submit' => null,
+            'tanggal_approval' => null,
+        ]);
+
+        Log::info('Status KRS direset oleh admin', [
+            'krs_id' => $krsId,
+            'mahasiswa_id' => $krs->mahasiswa_id,
+            'previous_status' => $previousStatus,
+        ]);
+
+        return $updatedKrs;
+    }
 
     /**
      * Validasi bentrok jadwal
@@ -287,5 +328,49 @@ class KrsService
     {
         $totalSks = $this->krsRepository->calculateTotalSks($krsId);
         $this->krsRepository->updateKrs($krsId, ['total_sks' => $totalSks]);
+    }
+    
+    /**
+     * Validasi prasyarat mata kuliah
+     * 
+     * Memeriksa apakah mahasiswa telah lulus semua mata kuliah prasyarat
+     * untuk mata kuliah yang ingin diambil
+     */
+    private function validatePrerequisites(int $mahasiswaId, int $kelasId): void
+    {
+        // Ambil data kelas dan mata kuliah yang ingin diambil
+        $kelas = \App\Models\Kelas::with('mataKuliah.prasyarats')->find($kelasId);
+        
+        if (!$kelas || !$kelas->mataKuliah) {
+            throw new \Exception('Data kelas atau mata kuliah tidak valid');
+        }
+        
+        $mataKuliah = $kelas->mataKuliah;
+        
+        // Jika tidak ada prasyarat, langsung return
+        if ($mataKuliah->prasyarats->isEmpty()) {
+            return;
+        }
+        
+        // Ambil daftar mata kuliah yang telah diambil dan lulus oleh mahasiswa
+        $lulusMataKuliah = \App\Models\NilaiAkhir::where('mahasiswa_id', $mahasiswaId)
+            ->where('nilai_huruf', '!=', 'E') // Nilai E dianggap tidak lulus
+            ->with('krsDetail.kelas.mataKuliah')
+            ->get()
+            ->pluck('krsDetail.kelas.mataKuliah.id')
+            ->toArray();
+        
+        // Cek setiap prasyarat
+        $belumLulus = [];
+        foreach ($mataKuliah->prasyarats as $prasyarat) {
+            if (!in_array($prasyarat->id, $lulusMataKuliah)) {
+                $belumLulus[] = $prasyarat->nama_mk;
+            }
+        }
+        
+        // Jika ada prasyarat yang belum lulus, throw exception
+        if (!empty($belumLulus)) {
+            throw new \Exception('Anda belum lulus mata kuliah prasyarat: ' . implode(', ', $belumLulus));
+        }
     }
 }
