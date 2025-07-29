@@ -15,8 +15,7 @@ class JadwalKuliahPolicy
      */
     public function viewAny(User $user): bool
     {
-        // Semua user bisa melihat daftar jadwal kuliah
-        return $user->can('view_any_jadwal_kuliah');
+        return $user->can('view_any_jadwal::kuliah');
     }
 
     /**
@@ -24,8 +23,7 @@ class JadwalKuliahPolicy
      */
     public function view(User $user, JadwalKuliah $jadwalKuliah): bool
     {
-        // Semua user bisa melihat detail jadwal kuliah
-        return $user->can('view_jadwal_kuliah');
+        return $user->can('view_jadwal::kuliah');
     }
 
     /**
@@ -33,8 +31,7 @@ class JadwalKuliahPolicy
      */
     public function create(User $user): bool
     {
-        // Hanya admin akademik yang bisa membuat jadwal kuliah
-        return $user->can('create_jadwal_kuliah');
+        return $user->can('create_jadwal::kuliah');
     }
 
     /**
@@ -42,8 +39,7 @@ class JadwalKuliahPolicy
      */
     public function update(User $user, JadwalKuliah $jadwalKuliah): bool
     {
-        // Hanya admin akademik yang bisa mengupdate jadwal kuliah
-        return $user->can('update_jadwal_kuliah');
+        return $user->can('update_jadwal::kuliah');
     }
 
     /**
@@ -51,36 +47,62 @@ class JadwalKuliahPolicy
      */
     public function delete(User $user, JadwalKuliah $jadwalKuliah): bool
     {
-        // Hanya admin akademik yang bisa menghapus jadwal kuliah
-        return $user->can('delete_jadwal_kuliah');
+        return $user->can('delete_jadwal::kuliah');
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Determine whether the user can bulk delete.
      */
-    public function restore(User $user, JadwalKuliah $jadwalKuliah): bool
+    public function deleteAny(User $user): bool
     {
-        return $user->can('restore_jadwal_kuliah');
+        return $user->can('delete_any_jadwal::kuliah');
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Determine whether the user can permanently delete.
      */
     public function forceDelete(User $user, JadwalKuliah $jadwalKuliah): bool
     {
-        return $user->can('force_delete_jadwal_kuliah');
+        return $user->can('force_delete_jadwal::kuliah');
     }
 
     /**
-     * Determine whether the user can view reports.
+     * Determine whether the user can permanently bulk delete.
      */
-    public function viewReport(User $user): bool
+    public function forceDeleteAny(User $user): bool
     {
-        // Admin akademik dan dosen bisa melihat laporan jadwal
-        if ($user->hasRole('dosen')) {
-            return true;
-        }
-        
-        return $user->can('view_report_jadwal_kuliah');
+        return $user->can('force_delete_any_jadwal::kuliah');
+    }
+
+    /**
+     * Determine whether the user can restore.
+     */
+    public function restore(User $user, JadwalKuliah $jadwalKuliah): bool
+    {
+        return $user->can('restore_jadwal::kuliah');
+    }
+
+    /**
+     * Determine whether the user can bulk restore.
+     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('restore_any_jadwal::kuliah');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, JadwalKuliah $jadwalKuliah): bool
+    {
+        return $user->can('replicate_jadwal::kuliah');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_jadwal::kuliah');
     }
 }

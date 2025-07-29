@@ -15,7 +15,7 @@ class RuangKuliahPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_ruang_kuliah');
+        return $user->can('view_any_ruang::kuliah');
     }
 
     /**
@@ -23,7 +23,7 @@ class RuangKuliahPolicy
      */
     public function view(User $user, RuangKuliah $ruangKuliah): bool
     {
-        return $user->can('view_ruang_kuliah');
+        return $user->can('view_ruang::kuliah');
     }
 
     /**
@@ -31,8 +31,7 @@ class RuangKuliahPolicy
      */
     public function create(User $user): bool
     {
-        // Hanya admin akademik yang bisa membuat ruang kuliah
-        return $user->can('create_ruang_kuliah');
+        return $user->can('create_ruang::kuliah');
     }
 
     /**
@@ -40,8 +39,7 @@ class RuangKuliahPolicy
      */
     public function update(User $user, RuangKuliah $ruangKuliah): bool
     {
-        // Hanya admin akademik yang bisa mengupdate ruang kuliah
-        return $user->can('update_ruang_kuliah');
+        return $user->can('update_ruang::kuliah');
     }
 
     /**
@@ -49,23 +47,62 @@ class RuangKuliahPolicy
      */
     public function delete(User $user, RuangKuliah $ruangKuliah): bool
     {
-        // Hanya admin akademik yang bisa menghapus ruang kuliah
-        return $user->can('delete_ruang_kuliah');
+        return $user->can('delete_ruang::kuliah');
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Determine whether the user can bulk delete.
      */
-    public function restore(User $user, RuangKuliah $ruangKuliah): bool
+    public function deleteAny(User $user): bool
     {
-        return $user->can('restore_ruang_kuliah');
+        return $user->can('delete_any_ruang::kuliah');
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Determine whether the user can permanently delete.
      */
     public function forceDelete(User $user, RuangKuliah $ruangKuliah): bool
     {
-        return $user->can('force_delete_ruang_kuliah');
+        return $user->can('force_delete_ruang::kuliah');
+    }
+
+    /**
+     * Determine whether the user can permanently bulk delete.
+     */
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('force_delete_any_ruang::kuliah');
+    }
+
+    /**
+     * Determine whether the user can restore.
+     */
+    public function restore(User $user, RuangKuliah $ruangKuliah): bool
+    {
+        return $user->can('restore_ruang::kuliah');
+    }
+
+    /**
+     * Determine whether the user can bulk restore.
+     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('restore_any_ruang::kuliah');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, RuangKuliah $ruangKuliah): bool
+    {
+        return $user->can('replicate_ruang::kuliah');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_ruang::kuliah');
     }
 }

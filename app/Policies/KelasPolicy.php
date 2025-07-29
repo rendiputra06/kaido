@@ -15,7 +15,6 @@ class KelasPolicy
      */
     public function viewAny(User $user): bool
     {
-        // Semua user bisa melihat daftar kelas
         return $user->can('view_any_kelas');
     }
 
@@ -24,7 +23,6 @@ class KelasPolicy
      */
     public function view(User $user, Kelas $kelas): bool
     {
-        // Semua user bisa melihat detail kelas
         return $user->can('view_kelas');
     }
 
@@ -33,7 +31,6 @@ class KelasPolicy
      */
     public function create(User $user): bool
     {
-        // Hanya admin akademik yang bisa membuat kelas
         return $user->can('create_kelas');
     }
 
@@ -42,12 +39,6 @@ class KelasPolicy
      */
     public function update(User $user, Kelas $kelas): bool
     {
-        // Dosen pengampu bisa mengupdate kelas yang diampu
-        if ($user->hasRole('dosen')) {
-            return $user->dosen->id === $kelas->dosen_id;
-        }
-        
-        // Admin akademik bisa mengupdate semua kelas
         return $user->can('update_kelas');
     }
 
@@ -56,20 +47,19 @@ class KelasPolicy
      */
     public function delete(User $user, Kelas $kelas): bool
     {
-        // Hanya admin akademik yang bisa menghapus kelas
         return $user->can('delete_kelas');
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Determine whether the user can bulk delete.
      */
-    public function restore(User $user, Kelas $kelas): bool
+    public function deleteAny(User $user): bool
     {
-        return $user->can('restore_kelas');
+        return $user->can('delete_any_kelas');
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Determine whether the user can permanently delete.
      */
     public function forceDelete(User $user, Kelas $kelas): bool
     {
@@ -77,16 +67,42 @@ class KelasPolicy
     }
 
     /**
-     * Determine whether the user can view the class roster.
+     * Determine whether the user can permanently bulk delete.
      */
-    public function viewRoster(User $user, Kelas $kelas): bool
+    public function forceDeleteAny(User $user): bool
     {
-        // Dosen pengampu bisa melihat daftar mahasiswa di kelas yang diampu
-        if ($user->hasRole('dosen')) {
-            return $user->dosen->id === $kelas->dosen_id;
-        }
-        
-        // Admin akademik bisa melihat daftar mahasiswa di semua kelas
-        return $user->can('view_roster_kelas');
+        return $user->can('force_delete_any_kelas');
+    }
+
+    /**
+     * Determine whether the user can restore.
+     */
+    public function restore(User $user, Kelas $kelas): bool
+    {
+        return $user->can('restore_kelas');
+    }
+
+    /**
+     * Determine whether the user can bulk restore.
+     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('restore_any_kelas');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, Kelas $kelas): bool
+    {
+        return $user->can('replicate_kelas');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_kelas');
     }
 }

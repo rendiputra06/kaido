@@ -15,7 +15,7 @@ class KrsMahasiswaPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_krs_mahasiswa');
+        return $user->can('view_any_krs::mahasiswa');
     }
 
     /**
@@ -23,18 +23,7 @@ class KrsMahasiswaPolicy
      */
     public function view(User $user, KrsMahasiswa $krsMahasiswa): bool
     {
-        // Mahasiswa hanya bisa melihat KRS miliknya sendiri
-        if ($user->hasRole('mahasiswa')) {
-            return $user->mahasiswa->id === $krsMahasiswa->mahasiswa_id;
-        }
-        
-        // Dosen hanya bisa melihat KRS mahasiswa bimbingannya
-        if ($user->hasRole('dosen')) {
-            return $user->dosen->id === $krsMahasiswa->dosen_pa_id;
-        }
-        
-        // Admin akademik bisa melihat semua KRS
-        return $user->can('view_krs_mahasiswa');
+        return $user->can('view_krs::mahasiswa');
     }
 
     /**
@@ -42,13 +31,7 @@ class KrsMahasiswaPolicy
      */
     public function create(User $user): bool
     {
-        // Hanya mahasiswa yang bisa membuat KRS
-        if ($user->hasRole('mahasiswa')) {
-            return true;
-        }
-        
-        // Admin akademik juga bisa membuat KRS untuk mahasiswa
-        return $user->can('create_krs_mahasiswa');
+        return $user->can('create_krs::mahasiswa');
     }
 
     /**
@@ -56,20 +39,7 @@ class KrsMahasiswaPolicy
      */
     public function update(User $user, KrsMahasiswa $krsMahasiswa): bool
     {
-        // Mahasiswa hanya bisa mengupdate KRS miliknya sendiri dan hanya jika statusnya draft
-        if ($user->hasRole('mahasiswa')) {
-            return $user->mahasiswa->id === $krsMahasiswa->mahasiswa_id && 
-                   $krsMahasiswa->status === 'draft';
-        }
-        
-        // Dosen PA hanya bisa mengupdate KRS mahasiswa bimbingannya untuk approval
-        if ($user->hasRole('dosen')) {
-            return $user->dosen->id === $krsMahasiswa->dosen_pa_id && 
-                   $krsMahasiswa->status === 'submitted';
-        }
-        
-        // Admin akademik bisa mengupdate semua KRS
-        return $user->can('update_krs_mahasiswa');
+        return $user->can('update_krs::mahasiswa');
     }
 
     /**
@@ -77,61 +47,62 @@ class KrsMahasiswaPolicy
      */
     public function delete(User $user, KrsMahasiswa $krsMahasiswa): bool
     {
-        // Hanya admin akademik yang bisa menghapus KRS
-        return $user->can('delete_krs_mahasiswa');
+        return $user->can('delete_krs::mahasiswa');
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Determine whether the user can bulk delete.
      */
-    public function restore(User $user, KrsMahasiswa $krsMahasiswa): bool
+    public function deleteAny(User $user): bool
     {
-        return $user->can('restore_krs_mahasiswa');
+        return $user->can('delete_any_krs::mahasiswa');
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Determine whether the user can permanently delete.
      */
     public function forceDelete(User $user, KrsMahasiswa $krsMahasiswa): bool
     {
-        return $user->can('force_delete_krs_mahasiswa');
+        return $user->can('force_delete_krs::mahasiswa');
     }
 
     /**
-     * Determine whether the user can submit the KRS.
+     * Determine whether the user can permanently bulk delete.
      */
-    public function submit(User $user, KrsMahasiswa $krsMahasiswa): bool
+    public function forceDeleteAny(User $user): bool
     {
-        // Mahasiswa hanya bisa submit KRS miliknya sendiri dan hanya jika statusnya draft
-        if ($user->hasRole('mahasiswa')) {
-            return $user->mahasiswa->id === $krsMahasiswa->mahasiswa_id && 
-                   $krsMahasiswa->status === 'draft';
-        }
-        
-        return false;
+        return $user->can('force_delete_any_krs::mahasiswa');
     }
 
     /**
-     * Determine whether the user can approve or reject the KRS.
+     * Determine whether the user can restore.
      */
-    public function approveOrReject(User $user, KrsMahasiswa $krsMahasiswa): bool
+    public function restore(User $user, KrsMahasiswa $krsMahasiswa): bool
     {
-        // Dosen PA hanya bisa approve/reject KRS mahasiswa bimbingannya dan hanya jika statusnya submitted
-        if ($user->hasRole('dosen')) {
-            return $user->dosen->id === $krsMahasiswa->dosen_pa_id && 
-                   $krsMahasiswa->status === 'submitted';
-        }
-        
-        // Admin akademik juga bisa approve/reject KRS
-        return $user->can('approve_krs_mahasiswa');
+        return $user->can('restore_krs::mahasiswa');
     }
 
     /**
-     * Determine whether the user can reset the KRS status.
+     * Determine whether the user can bulk restore.
      */
-    public function resetStatus(User $user, KrsMahasiswa $krsMahasiswa): bool
+    public function restoreAny(User $user): bool
     {
-        // Hanya admin akademik yang bisa mereset status KRS
-        return $user->can('reset_status_krs_mahasiswa');
+        return $user->can('restore_any_krs::mahasiswa');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, KrsMahasiswa $krsMahasiswa): bool
+    {
+        return $user->can('{{ Replicate }}');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_krs::mahasiswa');
     }
 }

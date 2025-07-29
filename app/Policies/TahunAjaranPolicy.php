@@ -15,7 +15,7 @@ class TahunAjaranPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_tahun_ajaran');
+        return $user->can('view_any_tahun::ajaran');
     }
 
     /**
@@ -23,7 +23,7 @@ class TahunAjaranPolicy
      */
     public function view(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $user->can('view_tahun_ajaran');
+        return $user->can('view_tahun::ajaran');
     }
 
     /**
@@ -31,7 +31,7 @@ class TahunAjaranPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_tahun_ajaran');
+        return $user->can('create_tahun::ajaran');
     }
 
     /**
@@ -39,7 +39,7 @@ class TahunAjaranPolicy
      */
     public function update(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $user->can('update_tahun_ajaran');
+        return $user->can('update_tahun::ajaran');
     }
 
     /**
@@ -47,7 +47,7 @@ class TahunAjaranPolicy
      */
     public function delete(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $user->can('delete_tahun_ajaran');
+        return $user->can('delete_tahun::ajaran');
     }
 
     /**
@@ -55,7 +55,7 @@ class TahunAjaranPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_tahun_ajaran');
+        return $user->can('delete_any_tahun::ajaran');
     }
 
     /**
@@ -63,7 +63,7 @@ class TahunAjaranPolicy
      */
     public function forceDelete(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $user->can('force_delete_tahun_ajaran');
+        return $user->can('force_delete_tahun::ajaran');
     }
 
     /**
@@ -71,7 +71,7 @@ class TahunAjaranPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_tahun_ajaran');
+        return $user->can('force_delete_any_tahun::ajaran');
     }
 
     /**
@@ -79,7 +79,7 @@ class TahunAjaranPolicy
      */
     public function restore(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $user->can('restore_tahun_ajaran');
+        return $user->can('restore_tahun::ajaran');
     }
 
     /**
@@ -87,7 +87,7 @@ class TahunAjaranPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_tahun_ajaran');
+        return $user->can('restore_any_tahun::ajaran');
     }
 
     /**
@@ -95,7 +95,7 @@ class TahunAjaranPolicy
      */
     public function replicate(User $user, TahunAjaran $tahunAjaran): bool
     {
-        return $user->can('replicate_tahun_ajaran');
+        return $user->can('replicate_tahun::ajaran');
     }
 
     /**
@@ -103,6 +103,6 @@ class TahunAjaranPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_tahun_ajaran');
+        return $user->can('reorder_tahun::ajaran');
     }
 }

@@ -137,20 +137,22 @@ Berikut adalah daftar tugas yang telah disempurnakan untuk implementasi Fase 2 d
     -   [x] `KomponenNilai`, `BorangNilai`, `NilaiMahasiswa`, `NilaiAkhir` dengan relasi yang sesuai.
 -   [x] **Data Seeder**
     -   [x] Membuat `KomponenNilaiSeeder` (Tugas, UTS, UAS, Praktikum, dll).
--   [ ] **Service & Repository Layer**
-    -   [ ] Membuat `NilaiRepositoryInterface` & `NilaiRepository`.
-    -   [ ] Membuat `NilaiService` (logika perhitungan, konversi, dan finalisasi nilai).
--   [ ] **Konfigurasi**
-    -   [ ] Membuat tabel `grade_scales` atau file config untuk konversi nilai angka ke huruf (A, B, C, D, E).
+-   [x] **Service & Repository Layer**
+    -   [x] Membuat `NilaiRepositoryInterface` & `NilaiRepository`.
+    -   [x] Membuat `NilaiService` (logika perhitungan, konversi, dan finalisasi nilai).
+-   [x] **Konfigurasi Skala Nilai**
+    -   [x] Membuat tabel `grade_scales` untuk konversi nilai.
+    -   [x] Membuat `GradeScaleSeeder` untuk data awal.
+    -   [x] Membuat `GradeScaleResource` untuk manajemen skala nilai oleh Admin.
 
 ### Hari 3-4: Implementasi Antarmuka Penilaian Dosen
 
 -   [x] **Filament Resource: `KomponenNilai`**
-    -   [ ] CRUD untuk komponen nilai default.
--   [ ] **Halaman Pengaturan Borang Nilai (Bagian dari Resource `Kelas` atau halaman custom Dosen)**
-    -   [ ] Dosen memilih komponen nilai untuk kelas yang diampu.
-    -   [ ] Dosen mengatur bobot per komponen (total harus 100%).
-    -   [ ] Fitur "Kunci Borang Nilai" agar tidak bisa diubah saat pengisian nilai.
+    -   [x] CRUD untuk komponen nilai default.
+-   [x] **Halaman Pengaturan Borang Nilai (Halaman custom Dosen)**
+    -   [x] Dosen memilih komponen nilai untuk kelas yang diampu.
+    -   [x] Dosen mengatur bobot per komponen (total harus 100%).
+    -   [x] Fitur "Kunci Borang Nilai" agar tidak bisa diubah saat pengisian nilai.
 -   [ ] **Halaman Input Nilai (Custom Filament Page untuk Dosen)**
     -   [ ] Pilih kelas yang diampu.
     -   [ ] Tampilkan daftar mahasiswa (dari KRS yang disetujui) dan kolom komponen nilai.
@@ -161,20 +163,20 @@ Berikut adalah daftar tugas yang telah disempurnakan untuk implementasi Fase 2 d
 
 ### Hari 5-7: Fitur Perhitungan dan Laporan
 
--   [ ] **Logika Perhitungan Nilai (`NilaiService`)**
-    -   [ ] Perhitungan nilai akhir berdasarkan bobot komponen.
-    -   [ ] Konversi nilai angka ke huruf (menggunakan `grade_scales`).
-    -   [ ] Perhitungan bobot nilai untuk IPK (A=4, B=3, dst).
--   [ ] **Fitur Finalisasi Nilai**
-    -   [ ] Saat finalisasi, simpan data ke tabel `nilai_akhirs`.
-    -   [ ] Setelah finalisasi, nilai tidak bisa diubah oleh dosen.
-    -   [ ] Admin memiliki akses untuk membuka kembali (unlock) nilai jika ada revisi, dengan pencatatan log.
--   [ ] **Laporan Nilai & KHS**
-    -   [ ] Halaman Kartu Hasil Studi (KHS) untuk mahasiswa (menampilkan nilai akhir per matkul dan IP semester).
-    -   [ ] Laporan nilai per kelas untuk dosen.
-    -   [ ] Laporan statistik nilai (distribusi A, B, C) untuk Kaprodi/Admin.
+-   [x] **Logika Perhitungan Nilai (`NilaiService`)**
+    -   [x] Perhitungan nilai akhir berdasarkan bobot komponen.
+    -   [x] Konversi nilai angka ke huruf (menggunakan `grade_scales`).
+    -   [x] Perhitungan bobot nilai untuk IPK (A=4, B=3, dst).
+-   [x] **Fitur Finalisasi Nilai**
+    -   [x] Saat finalisasi, simpan data ke tabel `nilai_akhirs`.
+    -   [x] Setelah finalisasi, nilai tidak bisa diubah oleh dosen.
+    -   [x] Admin memiliki akses untuk membuka kembali (unlock) nilai jika ada revisi, dengan pencatatan log.
+-   [x] **Laporan Nilai & KHS**
+    -   [x] Halaman Kartu Hasil Studi (KHS) untuk mahasiswa (menampilkan nilai akhir per matkul dan IP semester).
+    -   [x] Laporan nilai per kelas untuk dosen.
+    -   [x] Laporan statistik nilai (distribusi A, B, C) untuk Kaprodi/Admin.
 -   [ ] **Testing**
-    -   [ ] Membuat unit test untuk `NilaiService` (perhitungan dan konversi).
+    -   [ ] Membuat unit test untuk `NilaiService` (perhitungan dan konversi). *(Note: File test ada, tapi masih placeholder)*
     -   [ ] Membuat feature test untuk alur input dan finalisasi nilai.
 -   [ ] **Refinement & Bug Fixing**
 

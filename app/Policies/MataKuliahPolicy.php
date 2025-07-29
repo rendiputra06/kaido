@@ -15,7 +15,7 @@ class MataKuliahPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_mata_kuliah');
+        return $user->can('view_any_mata::kuliah');
     }
 
     /**
@@ -23,7 +23,7 @@ class MataKuliahPolicy
      */
     public function view(User $user, MataKuliah $mataKuliah): bool
     {
-        return $user->can('view_mata_kuliah');
+        return $user->can('view_mata::kuliah');
     }
 
     /**
@@ -31,7 +31,7 @@ class MataKuliahPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_mata_kuliah');
+        return $user->can('create_mata::kuliah');
     }
 
     /**
@@ -39,7 +39,7 @@ class MataKuliahPolicy
      */
     public function update(User $user, MataKuliah $mataKuliah): bool
     {
-        return $user->can('update_mata_kuliah');
+        return $user->can('update_mata::kuliah');
     }
 
     /**
@@ -47,7 +47,7 @@ class MataKuliahPolicy
      */
     public function delete(User $user, MataKuliah $mataKuliah): bool
     {
-        return $user->can('delete_mata_kuliah');
+        return $user->can('delete_mata::kuliah');
     }
 
     /**
@@ -55,7 +55,7 @@ class MataKuliahPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_mata_kuliah');
+        return $user->can('delete_any_mata::kuliah');
     }
 
     /**
@@ -63,7 +63,7 @@ class MataKuliahPolicy
      */
     public function forceDelete(User $user, MataKuliah $mataKuliah): bool
     {
-        return $user->can('force_delete_mata_kuliah');
+        return $user->can('force_delete_mata::kuliah');
     }
 
     /**
@@ -71,7 +71,7 @@ class MataKuliahPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_mata_kuliah');
+        return $user->can('force_delete_any_mata::kuliah');
     }
 
     /**
@@ -79,7 +79,7 @@ class MataKuliahPolicy
      */
     public function restore(User $user, MataKuliah $mataKuliah): bool
     {
-        return $user->can('restore_mata_kuliah');
+        return $user->can('restore_mata::kuliah');
     }
 
     /**
@@ -87,7 +87,7 @@ class MataKuliahPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_mata_kuliah');
+        return $user->can('restore_any_mata::kuliah');
     }
 
     /**
@@ -95,7 +95,7 @@ class MataKuliahPolicy
      */
     public function replicate(User $user, MataKuliah $mataKuliah): bool
     {
-        return $user->can('replicate_mata_kuliah');
+        return $user->can('replicate_mata::kuliah');
     }
 
     /**
@@ -103,6 +103,6 @@ class MataKuliahPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_mata_kuliah');
+        return $user->can('reorder_mata::kuliah');
     }
 }

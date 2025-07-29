@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('komponen_nilais', function (Blueprint $table) {
             $table->id();
+            $table->string('kode', 20)->unique();
+            $table->string('nama');
+            $table->decimal('default_bobot', 5, 2)->default(0);
+            $table->text('keterangan')->nullable();
+            $table->boolean('is_aktif')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

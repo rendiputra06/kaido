@@ -22,7 +22,10 @@ class MataKuliahResource extends Resource implements HasShieldPermissions
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
-    protected static ?string $navigationGroup = 'Akademik';
+    protected static ?string $navigationGroup = 'Data Master';
+    protected static ?string $title = 'Mata Kuliah';
+    protected static ?string $navigationLabel = 'Mata Kuliah';
+    protected static ?string $pluralModelLabel = 'Mata Kuliah';
     
     public static function getPermissionPrefixes(): array
     {

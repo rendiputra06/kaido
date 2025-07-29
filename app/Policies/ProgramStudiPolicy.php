@@ -15,7 +15,7 @@ class ProgramStudiPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_program_studi');
+        return $user->can('view_any_program::studi');
     }
 
     /**
@@ -23,7 +23,7 @@ class ProgramStudiPolicy
      */
     public function view(User $user, ProgramStudi $programStudi): bool
     {
-        return $user->can('view_program_studi');
+        return $user->can('view_program::studi');
     }
 
     /**
@@ -31,7 +31,7 @@ class ProgramStudiPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_program_studi');
+        return $user->can('create_program::studi');
     }
 
     /**
@@ -39,7 +39,7 @@ class ProgramStudiPolicy
      */
     public function update(User $user, ProgramStudi $programStudi): bool
     {
-        return $user->can('update_program_studi');
+        return $user->can('update_program::studi');
     }
 
     /**
@@ -47,7 +47,7 @@ class ProgramStudiPolicy
      */
     public function delete(User $user, ProgramStudi $programStudi): bool
     {
-        return $user->can('delete_program_studi');
+        return $user->can('delete_program::studi');
     }
 
     /**
@@ -55,7 +55,7 @@ class ProgramStudiPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_program_studi');
+        return $user->can('delete_any_program::studi');
     }
 
     /**
@@ -63,7 +63,7 @@ class ProgramStudiPolicy
      */
     public function forceDelete(User $user, ProgramStudi $programStudi): bool
     {
-        return $user->can('force_delete_program_studi');
+        return $user->can('force_delete_program::studi');
     }
 
     /**
@@ -71,7 +71,7 @@ class ProgramStudiPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_program_studi');
+        return $user->can('force_delete_any_program::studi');
     }
 
     /**
@@ -79,7 +79,7 @@ class ProgramStudiPolicy
      */
     public function restore(User $user, ProgramStudi $programStudi): bool
     {
-        return $user->can('restore_program_studi');
+        return $user->can('restore_program::studi');
     }
 
     /**
@@ -87,7 +87,7 @@ class ProgramStudiPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_program_studi');
+        return $user->can('restore_any_program::studi');
     }
 
     /**
@@ -95,7 +95,7 @@ class ProgramStudiPolicy
      */
     public function replicate(User $user, ProgramStudi $programStudi): bool
     {
-        return $user->can('replicate_program_studi');
+        return $user->can('replicate_program::studi');
     }
 
     /**
@@ -103,6 +103,6 @@ class ProgramStudiPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_program_studi');
+        return $user->can('reorder_program::studi');
     }
 }

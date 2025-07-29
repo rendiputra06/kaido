@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             ShieldSeeder::class,
             // UserRoleSeeder::class, // User role bisa di-handle oleh seeder utama jika perlu
             SemesterAktifSeeder::class,
+            KomponenNilaiSeeder::class, // Menambahkan seeder untuk komponen nilai
+            GradeScaleSeeder::class, // Menambahkan seeder untuk skala nilai
             // Seeder di bawah ini tidak perlu dipanggil lagi karena sudah dicakup oleh SemesterAktifSeeder
             // PeriodeKrsSeeder::class, 
             // MataKuliahPrerequisiteSeeder::class,

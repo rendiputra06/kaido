@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Kurikulum;
+use App\Models\GradeScale;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class KurikulumPolicy
+class GradeScalePolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class KurikulumPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_kurikulum');
+        return $user->can('view_any_grade::scale');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Kurikulum $kurikulum): bool
+    public function view(User $user, GradeScale $gradeScale): bool
     {
-        return $user->can('view_kurikulum');
+        return $user->can('view_grade::scale');
     }
 
     /**
@@ -31,23 +31,23 @@ class KurikulumPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_kurikulum');
+        return $user->can('create_grade::scale');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Kurikulum $kurikulum): bool
+    public function update(User $user, GradeScale $gradeScale): bool
     {
-        return $user->can('update_kurikulum');
+        return $user->can('update_grade::scale');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Kurikulum $kurikulum): bool
+    public function delete(User $user, GradeScale $gradeScale): bool
     {
-        return $user->can('delete_kurikulum');
+        return $user->can('delete_grade::scale');
     }
 
     /**
@@ -55,15 +55,15 @@ class KurikulumPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_kurikulum');
+        return $user->can('delete_any_grade::scale');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Kurikulum $kurikulum): bool
+    public function forceDelete(User $user, GradeScale $gradeScale): bool
     {
-        return $user->can('force_delete_kurikulum');
+        return $user->can('force_delete_grade::scale');
     }
 
     /**
@@ -71,15 +71,15 @@ class KurikulumPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_kurikulum');
+        return $user->can('force_delete_any_grade::scale');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Kurikulum $kurikulum): bool
+    public function restore(User $user, GradeScale $gradeScale): bool
     {
-        return $user->can('restore_kurikulum');
+        return $user->can('restore_grade::scale');
     }
 
     /**
@@ -87,15 +87,15 @@ class KurikulumPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_kurikulum');
+        return $user->can('restore_any_grade::scale');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Kurikulum $kurikulum): bool
+    public function replicate(User $user, GradeScale $gradeScale): bool
     {
-        return $user->can('replicate_kurikulum');
+        return $user->can('replicate_grade::scale');
     }
 
     /**
@@ -103,6 +103,6 @@ class KurikulumPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_kurikulum');
+        return $user->can('reorder_grade::scale');
     }
 }

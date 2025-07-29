@@ -15,8 +15,7 @@ class PeriodeKrsPolicy
      */
     public function viewAny(User $user): bool
     {
-        // Semua user bisa melihat daftar periode KRS
-        return $user->can('view_any_periode_krs');
+        return $user->can('view_any_periode::krs');
     }
 
     /**
@@ -24,8 +23,7 @@ class PeriodeKrsPolicy
      */
     public function view(User $user, PeriodeKrs $periodeKrs): bool
     {
-        // Semua user bisa melihat detail periode KRS
-        return $user->can('view_periode_krs');
+        return $user->can('view_periode::krs');
     }
 
     /**
@@ -33,8 +31,7 @@ class PeriodeKrsPolicy
      */
     public function create(User $user): bool
     {
-        // Hanya admin akademik yang bisa membuat periode KRS
-        return $user->can('create_periode_krs');
+        return $user->can('create_periode::krs');
     }
 
     /**
@@ -42,8 +39,7 @@ class PeriodeKrsPolicy
      */
     public function update(User $user, PeriodeKrs $periodeKrs): bool
     {
-        // Hanya admin akademik yang bisa mengupdate periode KRS
-        return $user->can('update_periode_krs');
+        return $user->can('update_periode::krs');
     }
 
     /**
@@ -51,32 +47,62 @@ class PeriodeKrsPolicy
      */
     public function delete(User $user, PeriodeKrs $periodeKrs): bool
     {
-        // Hanya admin akademik yang bisa menghapus periode KRS
-        return $user->can('delete_periode_krs');
+        return $user->can('delete_periode::krs');
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Determine whether the user can bulk delete.
      */
-    public function restore(User $user, PeriodeKrs $periodeKrs): bool
+    public function deleteAny(User $user): bool
     {
-        return $user->can('restore_periode_krs');
+        return $user->can('delete_any_periode::krs');
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Determine whether the user can permanently delete.
      */
     public function forceDelete(User $user, PeriodeKrs $periodeKrs): bool
     {
-        return $user->can('force_delete_periode_krs');
+        return $user->can('force_delete_periode::krs');
     }
 
     /**
-     * Determine whether the user can activate or deactivate the model.
+     * Determine whether the user can permanently bulk delete.
      */
-    public function toggleActive(User $user, PeriodeKrs $periodeKrs): bool
+    public function forceDeleteAny(User $user): bool
     {
-        // Hanya admin akademik yang bisa mengaktifkan/nonaktifkan periode KRS
-        return $user->can('toggle_active_periode_krs');
+        return $user->can('force_delete_any_periode::krs');
+    }
+
+    /**
+     * Determine whether the user can restore.
+     */
+    public function restore(User $user, PeriodeKrs $periodeKrs): bool
+    {
+        return $user->can('restore_periode::krs');
+    }
+
+    /**
+     * Determine whether the user can bulk restore.
+     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('restore_any_periode::krs');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, PeriodeKrs $periodeKrs): bool
+    {
+        return $user->can('replicate_periode::krs');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_periode::krs');
     }
 }
