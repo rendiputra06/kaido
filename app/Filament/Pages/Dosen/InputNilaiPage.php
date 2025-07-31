@@ -14,14 +14,15 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Collection;
 
-class InputNilaiPage extends Page implements HasForms
+class InputNilaiPage extends Page
 {
-    use HasPageShield, InteractsWithForms;
+    use HasPageShield;
 
     protected static string $permissionName = 'page_InputNilaiPage';
     protected static ?string $navigationIcon = 'heroicon-o-pencil-square';
-    protected static string $view = 'filament.pages.dosen.input-nilai-page';
+    protected static string $view = 'filament.pages.dosen.input-nilai-page-v2';
     protected static ?string $title = 'Input Nilai Mahasiswa';
     protected static ?string $slug = 'dosen/input-nilai';
     protected static ?string $navigationGroup = 'Dosen';
@@ -31,19 +32,21 @@ class InputNilaiPage extends Page implements HasForms
     public array $mahasiswaList = [];
     public array $borangNilai = [];
     public array $nilaiInput = [];
+    public bool $isBorangLocked = false;
 
-    protected $dosen;
-    protected $tahunAjaranAktif;
+    public ?TahunAjaran $tahunAjaranAktif;
+    public Collection $kelasList;
 
     public function mount(): void
     {
-        $this->dosen = Auth::user()->dosen;
-        if (!$this->dosen) {
+        $dosen = Auth::user()->dosen;
+        if (!$dosen) {
             Notification::make()
                 ->title('Akses Ditolak')
                 ->body('Anda tidak terasosiasi dengan data dosen manapun.')
                 ->danger()
                 ->send();
+            $this->kelasList = new Collection();
             return;
         }
 
@@ -54,46 +57,47 @@ class InputNilaiPage extends Page implements HasForms
                 ->body('Silakan hubungi admin untuk mengatur tahun ajaran yang aktif.')
                 ->warning()
                 ->send();
-        }
-    }
-
-    protected function getFormSchema(): array
-    {
-        return [
-            Select::make('selectedKelasId')
-                ->label('Pilih Kelas')
-                ->options($this->getKelasOptions())
-                ->reactive()
-                ->afterStateUpdated(function ($state) {
-                    $this->loadMahasiswaAndBorang($state);
-                })
-                ->placeholder('Pilih kelas yang Anda ajar'),
-        ];
-    }
-
-    protected function getKelasOptions(): array
-    {
-        if (!$this->dosen || !$this->tahunAjaranAktif) {
-            return [];
+            $this->kelasList = new Collection();
+            return;
         }
 
-        return Kelas::where('dosen_id', $this->dosen->id)
+        $this->kelasList = Kelas::where('dosen_id', $dosen->id)
             ->where('tahun_ajaran_id', $this->tahunAjaranAktif->id)
-            ->pluck('nama', 'id')
-            ->toArray();
+            ->with(['mataKuliah.programStudi', 'krsDetails.krsMahasiswa'])
+            ->get()
+            ->map(function ($kelas) {
+                $kelas->jumlah_mahasiswa = $kelas->krsDetails
+                    ->where('krsMahasiswa.status', 'approved')
+                    ->count();
+                return $kelas;
+            });
     }
 
-    public function loadMahasiswaAndBorang($kelasId): void
+    public function selectKelas($kelasId): void
     {
         if (!$kelasId) {
+            $this->selectedKelasId = null;
             $this->mahasiswaList = [];
             $this->borangNilai = [];
             $this->nilaiInput = [];
+            $this->isBorangLocked = false;
             return;
         }
 
         $this->selectedKelasId = $kelasId;
         $kelas = Kelas::with('borangNilais.komponenNilai')->find($kelasId);
+
+        // Cek jika semua borang nilai sudah dikunci
+        $this->isBorangLocked = $kelas->borangNilais->isNotEmpty() && $kelas->borangNilais->every(fn ($borang) => $borang->is_locked);
+
+        if (!$this->isBorangLocked) {
+            Notification::make()
+                ->title('Borang Nilai Belum Dikunci')
+                ->body('Anda belum bisa menginput nilai karena borang nilai untuk kelas ini belum dikunci.')
+                ->warning()
+                ->send();
+        }
+
         $this->borangNilai = $kelas->borangNilais->toArray();
 
         $mahasiswaIds = KrsMahasiswa::whereHas('krsDetails', function ($query) use ($kelasId) {
@@ -105,6 +109,7 @@ class InputNilaiPage extends Page implements HasForms
         // Initialize nilaiInput array
         $this->initializeNilaiInput();
     }
+
 
     protected function initializeNilaiInput(): void
     {
@@ -118,6 +123,15 @@ class InputNilaiPage extends Page implements HasForms
 
     public function saveNilai(): void
     {
+        if (!$this->isBorangLocked) {
+            Notification::make()
+                ->title('Aksi Ditolak')
+                ->body('Tidak dapat menyimpan nilai karena borang nilai belum dikunci.')
+                ->danger()
+                ->send();
+            return;
+        }
+
         // Logic to save grades will be implemented here
         Notification::make()
             ->title('Fitur Dalam Pengembangan')
@@ -128,6 +142,14 @@ class InputNilaiPage extends Page implements HasForms
 
     public function finalizeNilai(): void
     {
+        if (!$this->isBorangLocked) {
+            Notification::make()
+                ->title('Aksi Ditolak')
+                ->body('Tidak dapat finalisasi nilai karena borang nilai belum dikunci.')
+                ->danger()
+                ->send();
+            return;
+        }
         // Logic to finalize grades will be implemented here
         Notification::make()
             ->title('Fitur Dalam Pengembangan')

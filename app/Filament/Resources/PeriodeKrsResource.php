@@ -18,6 +18,9 @@ class PeriodeKrsResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $navigationGroup = 'Akademik';
     protected static ?string $modelLabel = 'Periode KRS';
+    protected static ?string $title = 'Periode KRS';
+    protected static ?string $navigationLabel = 'Periode KRS';
+    protected static ?string $pluralModelLabel = 'Periode KRS';
 
     public static function form(Form $form): Form
     {

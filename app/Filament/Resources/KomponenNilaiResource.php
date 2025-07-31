@@ -25,7 +25,10 @@ class KomponenNilaiResource extends Resource
     protected static ?string $model = KomponenNilai::class;
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
     protected static ?string $modelLabel = 'Komponen Nilai';
-    protected static ?string $navigationGroup = 'Akademik';
+    protected static ?string $navigationGroup = 'Penilaian';
+    protected static ?string $title = 'Komponen Nilai';
+    protected static ?string $navigationLabel = 'Komponen Nilai';
+    protected static ?string $pluralModelLabel = 'Komponen Nilai';
     protected static ?int $navigationSort = 30;
 
     public static function form(Form $form): Form
@@ -41,14 +44,14 @@ class KomponenNilaiResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->placeholder('TUGAS')
                             ->helperText('Kode unik untuk komponen nilai (maks. 20 karakter)'),
-                            
+
                         TextInput::make('nama')
                             ->label('Nama Komponen')
                             ->required()
                             ->maxLength(100)
                             ->placeholder('Tugas 1')
                             ->helperText('Nama lengkap komponen nilai'),
-                            
+
                         TextInput::make('default_bobot')
                             ->label('Bobot Default (%)')
                             ->numeric()
@@ -57,14 +60,14 @@ class KomponenNilaiResource extends Resource
                             ->step(0.01)
                             ->suffix('%')
                             ->helperText('Bobot default dalam persentase (0-100%)'),
-                            
+
                         Textarea::make('keterangan')
                             ->label('Keterangan')
                             ->rows(2)
                             ->maxLength(500)
                             ->columnSpanFull()
                             ->helperText('Deskripsi singkat tentang komponen nilai ini'),
-                            
+
                         Toggle::make('is_aktif')
                             ->label('Aktif')
                             ->default(true)
@@ -82,30 +85,30 @@ class KomponenNilaiResource extends Resource
                     ->label('KODE')
                     ->searchable()
                     ->sortable()
-                    ->description(fn (KomponenNilai $record) => $record->keterangan)
+                    ->description(fn(KomponenNilai $record) => $record->keterangan)
                     ->wrap(),
-                    
+
                 TextColumn::make('nama')
                     ->label('NAMA KOMPONEN')
                     ->searchable()
                     ->sortable(),
-                    
+
                 TextColumn::make('default_bobot')
                     ->label('BOBOT')
                     ->suffix('%')
                     ->sortable()
                     ->alignRight(),
-                    
+
                 ToggleColumn::make('is_aktif')
                     ->label('AKTIF')
                     ->sortable(),
-                    
+
                 TextColumn::make('created_at')
                     ->label('DIBUAT')
                     ->dateTime('d M Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                    
+
                 TextColumn::make('updated_at')
                     ->label('DIPERBARUI')
                     ->dateTime('d M Y H:i')

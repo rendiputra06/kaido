@@ -19,7 +19,7 @@ class ManageSetting extends SettingsPage
     protected static string $settings = KaidoSetting::class;
 
     protected static ?string $navigationGroup = 'Settings';
-
+    protected static ?int $navigationSort = 97;
     public function form(Form $form): Form
     {
         return $form

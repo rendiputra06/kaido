@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repositories\Interfaces;
+namespace App\Interfaces;
 
 use App\Models\BorangNilai;
 use App\Models\Kelas;
@@ -33,7 +33,7 @@ interface NilaiRepositoryInterface
     public function finalizeNilai(int $krsDetailId, int $dosenId): NilaiAkhir;
     public function getNilaiAkhirByMahasiswa(int $mahasiswaId, ?int $semester = null): Collection;
     public function getNilaiAkhirByKelas(int $kelasId): Collection;
-    
+
     // Laporan
     public function getRekapNilaiKelas(int $kelasId): array;
     public function getRekapNilaiMahasiswa(int $mahasiswaId, ?int $semester = null): array;

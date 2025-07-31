@@ -19,7 +19,10 @@ class GradeScaleResource extends Resource
     protected static ?string $model = GradeScale::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-scale';
-    protected static ?string $navigationGroup = 'Akademik';
+    protected static ?string $navigationGroup = 'Penilaian';
+    protected static ?string $title = 'Skala Nilai';
+    protected static ?string $navigationLabel = 'Skala Nilai';
+    protected static ?string $pluralModelLabel = 'Skala Nilai';
 
     public static function form(Form $form): Form
     {

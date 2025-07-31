@@ -54,7 +54,7 @@
         <div>
             @foreach ($this->getRelationManagers() as $manager)
                 @livewire($manager, ['ownerRecord' => $this->record, 'pageClass' => static::class])
-            @endforeach
+                @endforeach
+            </div>
         </div>
-    </div>
 </x-filament-panels::page>

@@ -13,38 +13,31 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Memanggil seeder utama untuk satu semester berjalan
+        // Panggil seeder untuk data master dan role terlebih dahulu
         $this->call([
             ShieldSeeder::class,
             PermissionDosenSeeder::class,
-            // UserRoleSeeder::class, // User role bisa di-handle oleh seeder utama jika perlu
-            SemesterAktifSeeder::class,
-            KomponenNilaiSeeder::class, // Menambahkan seeder untuk komponen nilai
-            GradeScaleSeeder::class, // Menambahkan seeder untuk skala nilai
-            // Seeder di bawah ini tidak perlu dipanggil lagi karena sudah dicakup oleh SemesterAktifSeeder
-            // PeriodeKrsSeeder::class, 
-            // MataKuliahPrerequisiteSeeder::class,
+            KomponenNilaiSeeder::class,
+            GradeScaleSeeder::class,
         ]);
 
-        // Membuat user admin utama
+        // Panggil seeder utama yang akan men-generate data transaksional
+        $this->call(SemesterAktifSeeder::class);
+
+        // Membuat user-user spesifik untuk testing
         $admin = User::factory()->create([
             'name' => 'admin',
             'email' => 'admin@admin.com',
         ]);
         $admin->assignRole('super_admin');
 
-        // Membuat user mahasiswa untuk testing
-        $mahasiswaUser = User::factory()->create([
-            'name' => 'mahasiswa',
-            'email' => 'mahasiswa@test.com',
-        ]);
-        $mahasiswaUser->assignRole('mahasiswa');
-
-        // Membuat user dosen untuk testing
         $dosenUser = User::factory()->create([
             'name' => 'dosen',
             'email' => 'dosen@test.com',
         ]);
         $dosenUser->assignRole('dosen');
+        // Note: Mahasiswa/Dosen record untuk user ini tidak dibuat otomatis,
+        // Seeder utama sudah membuat data dosen & mahasiswa yang lebih realistis.
+        // User ini bisa di-link manual ke salah satu record tsb jika perlu.
     }
 }

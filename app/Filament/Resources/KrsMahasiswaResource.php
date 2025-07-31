@@ -106,9 +106,11 @@ class KrsMahasiswaResource extends Resource implements HasShieldPermissions
             ->columns([
                 Tables\Columns\TextColumn::make('mahasiswa.nama')
                     ->searchable()
+                    ->description(fn($record): string => $record->mahasiswa->nim)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('mahasiswa.nim')
                     ->searchable()
+                    ->hidden()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('periodeKrs.nama_periode')
                     ->searchable()
@@ -118,17 +120,11 @@ class KrsMahasiswaResource extends Resource implements HasShieldPermissions
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (KrsStatusEnum $state): string => $state->getColor())
-                    ->formatStateUsing(fn (KrsStatusEnum $state): string => $state->getLabel())
+                    ->color(fn(KrsStatusEnum $state): string => $state->getColor())
+                    ->formatStateUsing(fn(KrsStatusEnum $state): string => $state->getLabel())
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_sks')
                     ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('tanggal_submit')
-                    ->dateTime('d M Y H:i')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('tanggal_approval')
-                    ->dateTime('d M Y H:i')
                     ->sortable(),
             ])
             ->filters([
@@ -153,7 +149,7 @@ class KrsMahasiswaResource extends Resource implements HasShieldPermissions
                     ->modalDescription('Apakah Anda yakin ingin mereset status KRS ini menjadi draft? Tindakan ini akan memungkinkan mahasiswa untuk mengubah KRS kembali.')
                     ->modalSubmitActionLabel('Ya, Reset Status')
                     ->modalCancelActionLabel('Batal')
-                    ->visible(fn (KrsMahasiswa $record): bool => $record->status !== KrsStatusEnum::DRAFT)
+                    ->visible(fn(KrsMahasiswa $record): bool => $record->status !== KrsStatusEnum::DRAFT)
                     ->action(function (KrsMahasiswa $record, KrsService $krsService) {
                         try {
                             $krsService->resetKrsStatus($record->id);

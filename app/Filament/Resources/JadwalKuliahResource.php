@@ -6,6 +6,7 @@ use App\Filament\Resources\JadwalKuliahResource\Pages;
 use App\Filament\Resources\JadwalKuliahResource\RelationManagers;
 use App\Interfaces\JadwalServiceInterface;
 use App\Models\JadwalKuliah;
+use App\Models\TahunAjaran;
 use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,7 +14,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\SelectFilter;
 
 class JadwalKuliahResource extends Resource
 {
@@ -30,7 +33,10 @@ class JadwalKuliahResource extends Resource
                 Forms\Components\Select::make('kelas_id')
                     ->relationship('kelas', 'nama')
                     ->required()
-                    ->live(),
+                    ->live()
+                    ->searchable()
+                    ->preload()
+                    ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->mataKuliah->nama_matakuliah} - {$record->nama} (Sisa: {$record->sisa_kuota})"),
                 Forms\Components\Select::make('ruang_kuliah_id')
                     ->relationship('ruangKuliah', 'nama')
                     ->required()
@@ -99,7 +105,7 @@ class JadwalKuliahResource extends Resource
                         };
                     }),
                 Forms\Components\Hidden::make('dosen_id')
-                    ->default(fn (Forms\Get $get) => \App\Models\Kelas::find($get('kelas_id'))?->dosen_id),
+                    ->default(fn(Forms\Get $get) => \App\Models\Kelas::find($get('kelas_id'))?->dosen_id),
             ]);
     }
 
@@ -107,12 +113,21 @@ class JadwalKuliahResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('kelas.tahunAjaran.nama')
+                    ->label('Tahun Ajaran')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('kelas.mataKuliah.nama_mk')
+                    ->label('Mata Kuliah')
+                    ->sortable()
+                    ->searchable()
+                    ->description(fn (Model $record): string => $record->kelas->tahunAjaran->nama),
                 Tables\Columns\TextColumn::make('kelas.nama')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('ruangKuliah.nama')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Kelas')
+                    ->sortable()
+                    ->searchable()
+                    ->description(fn (Model $record): string => 'Ruang: ' . $record->ruangKuliah->nama),
                 Tables\Columns\TextColumn::make('hari')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('jam_mulai'),
@@ -127,10 +142,16 @@ class JadwalKuliahResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('tahun_ajaran')
+                    ->relationship('kelas.tahunAjaran', 'nama')
+                    ->label('Tahun Ajaran')
+                    ->searchable()
+                    ->preload()
+                    ->default(fn() => TahunAjaran::latest('id')->first()?->id),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

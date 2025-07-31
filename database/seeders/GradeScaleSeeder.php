@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\GradeScale;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,7 +13,7 @@ class GradeScaleSeeder extends Seeder
      */
     public function run(): void
     {
-        $grades = [
+        $skala = [
             ['nilai_huruf' => 'A', 'nilai_indeks' => 4.00, 'rentang_bawah' => 85.00, 'rentang_atas' => 100.00],
             ['nilai_huruf' => 'A-', 'nilai_indeks' => 3.75, 'rentang_bawah' => 80.00, 'rentang_atas' => 84.99],
             ['nilai_huruf' => 'B+', 'nilai_indeks' => 3.25, 'rentang_bawah' => 75.00, 'rentang_atas' => 79.99],
@@ -24,8 +25,9 @@ class GradeScaleSeeder extends Seeder
             ['nilai_huruf' => 'E', 'nilai_indeks' => 0.00, 'rentang_bawah' => 0.00, 'rentang_atas' => 39.99],
         ];
 
-        foreach ($grades as $grade) {
-            \App\Models\GradeScale::create($grade);
+        foreach ($skala as $item) {
+            // Membuat skala nilai umum (tanpa program_studi_id)
+            GradeScale::create($item);
         }
     }
 }

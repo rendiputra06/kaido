@@ -41,4 +41,14 @@ class Kelas extends Model
     {
         return $this->hasMany(JadwalKuliah::class);
     }
+
+    public function krsDetails(): HasMany
+    {
+        return $this->hasMany(KrsDetail::class);
+    }
+
+    public function borangNilais(): HasMany
+    {
+        return $this->hasMany(BorangNilai::class);
+    }
 }

@@ -54,18 +54,18 @@ class KrsDetailsRelationManager extends RelationManager
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label('Tambah Mata Kuliah')
-                    ->visible(fn () => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
+                    ->visible(fn() => $this->ownerRecord->status->value === KrsStatusEnum::SUBMITTED),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->visible(fn () => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
+                    ->visible(fn() => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn () => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
+                    ->visible(fn() => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                ])->visible(fn () => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
+                ])->visible(fn() => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
             ]);
     }
 }

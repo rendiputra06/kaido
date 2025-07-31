@@ -8,180 +8,183 @@ use App\Models\Kelas;
 use App\Models\TahunAjaran;
 use App\Models\KomponenNilai;
 use Illuminate\Support\Facades\Auth;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use App\Models\BorangNilai;
-use Filament\Actions\Action;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TextInput;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
-class AturBorangNilai extends Page implements HasForms
+class AturBorangNilai extends Page
 {
-        use HasPageShield;
-    use InteractsWithForms;
+    use HasPageShield;
 
-        protected static string $permissionName = 'page_AturBorangNilai';
+    protected static string $permissionName = 'page_AturBorangNilai';
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
-    protected static string $view = 'filament.pages.dosen.atur-borang-nilai';
+    protected static string $view = 'filament.pages.dosen.atur-borang-nilai-v2';
     protected static ?string $title = 'Pengaturan Borang Nilai';
     protected static ?string $slug = 'dosen/atur-borang-nilai';
     protected static ?string $navigationGroup = 'Dosen';
     protected static ?int $navigationSort = 2;
 
-    public $kelasOptions = [];
+    public ?Collection $kelasList = null;
+    public ?Collection $komponenOptions = null;
+    public ?TahunAjaran $tahunAjaranAktif;
+
     public ?int $selectedKelasId = null;
-    public $komponenItems = [];
-    public $isLocked = false;
+    public array $borang = [];
+    public int $totalBobot = 0;
+    public bool $isLocked = false;
 
     public function mount(): void
     {
-        $this->loadKelasOptions();
-        $this->form->fill();
+        $this->tahunAjaranAktif = TahunAjaran::where('is_active', true)->first();
+        $this->loadKelasList();
+        $this->komponenOptions = KomponenNilai::where('is_aktif', true)->pluck('nama', 'id');
     }
 
-    protected function loadKelasOptions(): void
+    protected function loadKelasList(): void
     {
         $dosenId = Auth::user()->dosen->id ?? null;
-        $tahunAjaranAktif = TahunAjaran::where('is_active', true)->first();
 
-        if (!$dosenId || !$tahunAjaranAktif) {
-            $this->kelasOptions = [];
+        if (!$dosenId || !$this->tahunAjaranAktif) {
+            $this->kelasList = collect();
             return;
         }
 
-        $this->kelasOptions = Kelas::where('dosen_id', $dosenId)
-            ->where('tahun_ajaran_id', $tahunAjaranAktif->id)
-            ->with('mataKuliah')
+        $this->kelasList = Kelas::where('dosen_id', $dosenId)
+            ->where('tahun_ajaran_id', $this->tahunAjaranAktif->id)
+            ->with(['mataKuliah', 'borangNilais'])
             ->get()
-            ->mapWithKeys(fn($kelas) => [$kelas->id => $kelas->mataKuliah->nama . ' - ' . $kelas->nama])
-            ->toArray();
+            ->map(function ($kelas) {
+                $isLocked = $kelas->borangNilais->isNotEmpty() && $kelas->borangNilais->first()->is_locked;
+                $isFilled = $kelas->borangNilais->isNotEmpty();
+
+                $kelas->borang_status = $isLocked ? 'Terkunci' : ($isFilled ? 'Terisi' : 'Kosong');
+                return $kelas;
+            });
     }
 
-    public function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Select::make('selectedKelasId')
-                    ->label('Pilih Kelas')
-                    ->options($this->kelasOptions)
-                    ->reactive()
-                    ->afterStateUpdated(fn ($state) => $this->updatedSelectedKelasId($state))
-                    ->required(),
-                Repeater::make('komponenItems')
-                    ->label('Komponen Penilaian')
-                    ->schema([
-                        Select::make('komponen_nilai_id')
-                            ->label('Komponen')
-                            ->options(KomponenNilai::where('is_aktif', true)->pluck('nama', 'id'))
-                            ->required(),
-                        TextInput::make('bobot')
-                            ->label('Bobot (%)')
-                            ->numeric()
-                            ->required()
-                            ->minValue(0)
-                            ->maxValue(100),
-                    ])
-                    ->columns(2)
-                    ->defaultItems(1)
-                                        ->addActionLabel('Tambah Komponen')
-                    ->visible(fn ($get) => $get('selectedKelasId'))
-                    ->disabled($this->isLocked),
-            ])->statePath('data');
-    }
-
-    public function updatedSelectedKelasId(?int $kelasId): void
+    public function selectKelas(?int $kelasId): void
     {
         if (!$kelasId) {
-            $this->komponenItems = [];
-            $this->isLocked = false;
+            $this->resetState();
             return;
         }
 
-        $kelas = Kelas::with('borangNilais')->find($kelasId);
-        $this->isLocked = $kelas->borangNilais->first()->is_locked ?? false;
+        $this->selectedKelasId = $kelasId;
+        $kelas = $this->kelasList->firstWhere('id', $kelasId);
 
-        $this->komponenItems = $kelas->borangNilais->map(fn ($borang) => [
-            'komponen_nilai_id' => $borang->komponen_nilai_id,
-            'bobot' => $borang->bobot,
+        $this->isLocked = $kelas->borang_status === 'Terkunci';
+
+        $this->borang = $kelas->borangNilais->map(fn($b) => [
+            'komponen_nilai_id' => $b->komponen_nilai_id,
+            'bobot' => $b->bobot,
         ])->toArray();
 
-        // Fill the form with the loaded data
-        $this->form->fill(['selectedKelasId' => $kelasId, 'komponenItems' => $this->komponenItems]);
+        $this->calculateTotalBobot();
     }
 
-    protected function getHeaderActions(): array
+    public function updatedBorang(): void
     {
-        return [
-            Action::make('save')
-                ->label('Simpan Perubahan')
-                ->action('saveBorang')
-                ->visible(fn () => $this->selectedKelasId && !$this->isLocked),
-            Action::make('lock')
-                ->label('Kunci Borang Nilai')
-                ->action('lockBorang')
-                ->color('danger')
-                ->requiresConfirmation()
-                ->modalHeading('Kunci Borang Nilai')
-                ->modalDescription('Setelah dikunci, komposisi borang nilai tidak dapat diubah. Pastikan total bobot adalah 100%.')
-                ->visible(fn () => $this->selectedKelasId && !$this->isLocked),
-        ];
+        $this->calculateTotalBobot();
     }
 
-    public function saveBorang(): void
+    protected function calculateTotalBobot(): void
     {
-        $data = $this->form->getState();
-        $totalBobot = collect($data['komponenItems'])->sum('bobot');
+        $this->totalBobot = collect($this->borang)->sum('bobot');
+    }
 
-        if ($totalBobot != 100) {
+    public function addBorangItem(): void
+    {
+        $this->borang[] = ['komponen_nilai_id' => '', 'bobot' => 0];
+    }
+
+    public function removeBorangItem(int $index): void
+    {
+        unset($this->borang[$index]);
+        $this->borang = array_values($this->borang);
+        $this->calculateTotalBobot();
+    }
+
+    public function saveBorang(bool $andLock = false): void
+    {
+        // Validasi duplikat & kosong
+        $borangBersih = collect($this->borang)
+            ->filter(fn($item) => !empty($item['komponen_nilai_id']))
+            ->values();
+
+        $komponenIds = $borangBersih->pluck('komponen_nilai_id');
+        if ($komponenIds->count() !== $komponenIds->unique()->count()) {
             Notification::make()
                 ->title('Validasi Gagal')
-                ->body('Total bobot semua komponen harus tepat 100%. Saat ini totalnya adalah ' . $totalBobot . '%.')
+                ->body('Terdapat komponen nilai yang dipilih lebih dari satu kali atau kosong.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        if ($this->totalBobot != 100) {
+            Notification::make()
+                ->title('Validasi Gagal')
+                ->body('Total bobot semua komponen harus tepat 100%.')
                 ->danger()
                 ->send();
             return;
         }
 
         $dosenId = Auth::user()->dosen->id;
-        BorangNilai::where('kelas_id', $data['selectedKelasId'])->delete();
 
-        foreach ($data['komponenItems'] as $item) {
-            BorangNilai::create([
-                'kelas_id' => $data['selectedKelasId'],
-                'komponen_nilai_id' => $item['komponen_nilai_id'],
-                'bobot' => $item['bobot'],
-                'dosen_id' => $dosenId,
-                'is_locked' => false,
-            ]);
+        // Hapus data lama di luar transaction
+        BorangNilai::where('kelas_id', $this->selectedKelasId)->delete();
+
+        if (BorangNilai::where('kelas_id', $this->selectedKelasId)->exists()) {
+            Notification::make()
+                ->title('Gagal Menghapus Data Lama')
+                ->body('Data lama tidak berhasil dihapus, silakan coba lagi.')
+                ->danger()
+                ->send();
+            return;
         }
 
-        Notification::make()
-            ->title('Borang Nilai Berhasil Disimpan')
-            ->success()
-            ->send();
+        // Insert data baru
+        try {
+            foreach ($borangBersih as $item) {
+                BorangNilai::create([
+                    'kelas_id' => $this->selectedKelasId,
+                    'komponen_nilai_id' => $item['komponen_nilai_id'],
+                    'bobot' => $item['bobot'],
+                    'dosen_id' => $dosenId,
+                    'is_locked' => $andLock,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Gagal Menyimpan Borang Nilai')
+                ->body('Terjadi error: ' . $e->getMessage())
+                ->danger()
+                ->send();
+            return;
+        }
+
+        if ($andLock) {
+            $this->isLocked = true;
+            Notification::make()->title('Borang Nilai Berhasil Disimpan & Dikunci')->success()->send();
+        } else {
+            Notification::make()->title('Borang Nilai Berhasil Disimpan')->success()->send();
+        }
+
+        $this->loadKelasList(); // Refresh status
     }
 
-    public function lockBorang(): void
+    public function saveAndLockBorang(): void
     {
-        $this->saveBorang(); // Save first to ensure data is valid and stored
-
-        // Re-check validation before locking
-        $data = $this->form->getState();
-        $totalBobot = collect($data['komponenItems'])->sum('bobot');
-        if ($totalBobot != 100) {
-            return; // Notification is already sent from saveBorang
-        }
-
-        BorangNilai::where('kelas_id', $data['selectedKelasId'])->update(['is_locked' => true]);
-        $this->isLocked = true;
-
-        Notification::make()
-            ->title('Borang Nilai Berhasil Dikunci')
-            ->body('Komposisi borang nilai tidak dapat diubah lagi.')
-            ->success()
-            ->send();
+        $this->saveBorang(true);
     }
 
+    protected function resetState(): void
+    {
+        $this->selectedKelasId = null;
+        $this->borang = [];
+        $this->totalBobot = 0;
+        $this->isLocked = false;
+    }
 }
