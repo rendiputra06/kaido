@@ -19,10 +19,12 @@ class MahasiswaFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'user_id' => User::factory()->afterCreating(function (User $user) {
+                $user->assignRole('mahasiswa');
+            }),
             'program_studi_id' => ProgramStudi::factory(),
             'nim' => $this->faker->unique()->numerify('########'),
-            'nama' => $this->faker->name(),
+            'nama' => fake('id_ID')->firstName() . ' ' . fake('id_ID')->lastName(),
             'angkatan' => $this->faker->numberBetween(2020, 2024),
             'status_mahasiswa' => $this->faker->randomElement(['Aktif', 'Cuti', 'Lulus', 'Dropout']),
             'foto' => null,

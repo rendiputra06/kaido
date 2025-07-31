@@ -66,7 +66,7 @@ class KrsService implements KrsServiceInterface
         }
 
         // Cek status KRS
-        if (!$krs->isDraft()) {
+        if ($krs->status !== \App\Enums\KrsStatusEnum::DRAFT) {
             throw new \Exception('KRS sudah disubmit, tidak bisa menambah mata kuliah');
         }
 
@@ -105,7 +105,7 @@ class KrsService implements KrsServiceInterface
         }
 
         // Cek status KRS
-        if (!$krs->isDraft()) {
+        if ($krs->status !== \App\Enums\KrsStatusEnum::DRAFT) {
             throw new \Exception('KRS sudah disubmit, tidak bisa menghapus mata kuliah');
         }
 
@@ -137,7 +137,7 @@ class KrsService implements KrsServiceInterface
         }
 
         // Cek status KRS
-        if (!$krs->isDraft()) {
+        if ($krs->status !== \App\Enums\KrsStatusEnum::DRAFT) {
             throw new \Exception('KRS sudah disubmit sebelumnya');
         }
 
@@ -172,24 +172,52 @@ class KrsService implements KrsServiceInterface
         }
 
         // Cek status KRS
-        if (!$krs->isSubmitted()) {
+        if ($krs->status !== \App\Enums\KrsStatusEnum::SUBMITTED) {
             throw new \Exception('KRS belum disubmit');
         }
 
-        // Update status KRS
-        $krs = $this->krsRepository->updateKrs($krsId, [
-            'status' => 'approved',
-            'catatan_pa' => $catatan,
-            'tanggal_approval' => now(),
-        ]);
+        // Mulai transaksi untuk atomic operation
+        return \DB::transaction(function () use ($krsId, $catatan, $krs) {
+            // Ambil semua detail KRS yang aktif
+            $activeDetails = $krs->krsDetails()->where('status', 'active')->get();
+            
+            // Kurangi kuota untuk setiap kelas yang diambil
+            foreach ($activeDetails as $detail) {
+                $kelas = $detail->kelas;
+                
+                // Cek apakah masih ada kuota yang tersedia
+                if ($kelas->sisa_kuota <= 0) {
+                    throw new \Exception("Kuota kelas {$kelas->kode_kelas} sudah penuh");
+                }
+                
+                // Kurangi kuota secara atomik
+                $kelas->decrement('sisa_kuota');
+                
+                Log::info('Kuota kelas berkurang', [
+                    'kelas_id' => $kelas->id,
+                    'kode_kelas' => $kelas->kode_kelas,
+                    'mahasiswa_id' => $krs->mahasiswa_id,
+                    'krs_id' => $krsId,
+                    'sisa_kuota' => $kelas->fresh()->sisa_kuota,
+                ]);
+            }
 
-        Log::info('KRS disetujui oleh dosen PA', [
-            'krs_id' => $krsId,
-            'mahasiswa_id' => $krs->mahasiswa_id,
-            'dosen_pa_id' => $krs->dosen_pa_id,
-        ]);
+            // Update status KRS
+            $krs = $this->krsRepository->updateKrs($krsId, [
+                'status' => 'approved',
+                'catatan_pa' => $catatan,
+                'tanggal_approval' => now(),
+            ]);
 
-        return $krs;
+            Log::info('KRS disetujui oleh dosen PA', [
+                'krs_id' => $krsId,
+                'mahasiswa_id' => $krs->mahasiswa_id,
+                'dosen_pa_id' => $krs->dosen_pa_id,
+                'total_kelas' => $activeDetails->count(),
+            ]);
+
+            return $krs;
+        });
     }
 
     /**
@@ -203,7 +231,7 @@ class KrsService implements KrsServiceInterface
         }
 
         // Cek status KRS
-        if (!$krs->isSubmitted()) {
+        if ($krs->status !== \App\Enums\KrsStatusEnum::SUBMITTED) {
             throw new \Exception('KRS belum disubmit');
         }
 
@@ -238,7 +266,7 @@ class KrsService implements KrsServiceInterface
         }
 
         // Hanya bisa reset jika status bukan draft
-        if ($krs->isDraft()) {
+        if ($krs->status === \App\Enums\KrsStatusEnum::DRAFT) {
             throw new \Exception('KRS sudah berstatus draft');
         }
 

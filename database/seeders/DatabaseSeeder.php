@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         // Memanggil seeder utama untuk satu semester berjalan
         $this->call([
             ShieldSeeder::class,
+            PermissionDosenSeeder::class,
             // UserRoleSeeder::class, // User role bisa di-handle oleh seeder utama jika perlu
             SemesterAktifSeeder::class,
             KomponenNilaiSeeder::class, // Menambahkan seeder untuk komponen nilai

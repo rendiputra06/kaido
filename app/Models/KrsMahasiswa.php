@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\KrsStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,7 @@ class KrsMahasiswa extends Model
     protected $casts = [
         'tanggal_submit' => 'datetime',
         'tanggal_approval' => 'datetime',
+        'status' => KrsStatusEnum::class,
     ];
 
     public function mahasiswa(): BelongsTo
@@ -48,38 +50,6 @@ class KrsMahasiswa extends Model
     }
 
     /**
-     * Cek apakah KRS sudah disubmit
-     */
-    public function isSubmitted(): bool
-    {
-        return $this->status === 'submitted';
-    }
-
-    /**
-     * Cek apakah KRS sudah disetujui
-     */
-    public function isApproved(): bool
-    {
-        return $this->status === 'approved';
-    }
-
-    /**
-     * Cek apakah KRS ditolak
-     */
-    public function isRejected(): bool
-    {
-        return $this->status === 'rejected';
-    }
-
-    /**
-     * Cek apakah KRS masih draft
-     */
-    public function isDraft(): bool
-    {
-        return $this->status === 'draft';
-    }
-
-    /**
      * Hitung total SKS dari detail KRS
      */
     public function calculateTotalSks(): int
@@ -91,3 +61,4 @@ class KrsMahasiswa extends Model
             ->sum('mata_kuliahs.sks');
     }
 }
+

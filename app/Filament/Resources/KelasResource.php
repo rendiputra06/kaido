@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\KelasResource\Pages;
 use App\Filament\Resources\KelasResource\RelationManagers;
+use App\Filament\Resources\KelasResource\RelationManagers\JadwalKuliahRelationManager;
 use App\Models\Kelas;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -107,7 +108,7 @@ class KelasResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\JadwalKuliahRelationManager::class,
         ];
     }
 
@@ -122,6 +123,6 @@ class KelasResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['mataKuliah.programStudi', 'dosen', 'tahunAjaran']);
+        return parent::getEloquentQuery()->with(['mataKuliah.programStudi', 'dosen', 'tahunAjaran', 'jadwalKuliahs.ruangKuliah']);
     }
 }

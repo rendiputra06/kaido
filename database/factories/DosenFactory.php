@@ -18,9 +18,11 @@ class DosenFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'user_id' => User::factory()->afterCreating(function (User $user) {
+                $user->assignRole('dosen');
+            }),
             'nidn' => $this->faker->unique()->numerify('########'),
-            'nama' => $this->faker->name(),
+            'nama' => \Faker\Factory::create('id_ID')->name(),
             'jabatan_fungsional' => $this->faker->randomElement(['Lektor', 'Lektor Kepala', 'Guru Besar', 'Asisten Ahli']),
             'foto' => null,
         ];

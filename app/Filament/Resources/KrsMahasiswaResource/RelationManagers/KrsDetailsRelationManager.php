@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\KrsMahasiswaResource\RelationManagers;
 
+use App\Enums\KrsStatusEnum;
+use App\Models\Kelas;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -13,102 +15,57 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class KrsDetailsRelationManager extends RelationManager
 {
     protected static string $relationship = 'krsDetails';
-
-    protected static ?string $recordTitleAttribute = 'id';
-    
-    protected static ?string $title = 'Detail KRS';
-    protected static ?string $label = 'Mata Kuliah';
-    protected static ?string $pluralLabel = 'Mata Kuliah';
+    protected static ?string $title = 'Mata Kuliah yang Diambil';
 
     public function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Select::make('kelas_id')
-                    ->label('Kelas')
-                    ->relationship('kelas', 'nama', function (Builder $query) {
-                        // Filter kelas yang masih memiliki kuota
-                        return $query->where('sisa_kuota', '>', 0);
-                    })
+                    ->label('Mata Kuliah')
+                    ->options(Kelas::with(['mataKuliah', 'dosen'])->get()->mapWithKeys(function ($kelas) {
+                        return [$kelas->id => "{$kelas->mataKuliah->nama_mk} ({$kelas->mataKuliah->sks} SKS) - Dosen: {$kelas->dosen->nama}"];
+                    }))
                     ->searchable()
-                    ->preload()
-                    ->required()
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('sks')
-                    ->label('SKS')
-                    ->numeric()
                     ->required(),
-                Forms\Components\Select::make('status')
-                    ->label('Status')
-                    ->options([
-                        'active' => 'Aktif',
-                        'canceled' => 'Dibatalkan',
-                    ])
-                    ->required(),
-                Forms\Components\Textarea::make('keterangan')
-                    ->label('Keterangan')
-                    ->columnSpanFull(),
             ]);
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('id')
+            ->recordTitleAttribute('kelas.mataKuliah.nama_mk')
             ->columns([
-                Tables\Columns\TextColumn::make('kelas.mataKuliah.kode_mk')
-                    ->label('Kode MK')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('kelas.mataKuliah.nama_mk')
                     ->label('Mata Kuliah')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('kelas.nama')
-                    ->label('Kelas')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('kelas.dosen.nama')
-                    ->label('Dosen')
+                    ->label('Dosen Pengampu')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('sks')
+                Tables\Columns\TextColumn::make('kelas.mataKuliah.sks')
                     ->label('SKS')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'canceled' => 'danger',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'active' => 'Aktif',
-                        'canceled' => 'Dibatalkan',
-                        default => $state,
-                    })
                     ->sortable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'active' => 'Aktif',
-                        'canceled' => 'Dibatalkan',
-                    ]),
+                //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label('Tambah Mata Kuliah')
+                    ->visible(fn () => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn () => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn () => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                ])->visible(fn () => $this->ownerRecord->status === KrsStatusEnum::SUBMITTED),
             ]);
     }
 }

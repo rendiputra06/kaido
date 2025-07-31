@@ -94,9 +94,13 @@ class KrsRepository implements KrsRepositoryInterface
             throw new \Exception('Kelas sudah diambil dalam KRS ini');
         }
 
-        // Cek sisa kuota kelas
-        if ($kelas->sisa_kuota <= 0) {
-            throw new \Exception('Kuota kelas sudah penuh');
+        // Untuk KRS yang masih draft, tidak perlu cek kuota
+        // Kuota akan dicek saat approval
+        if ($krs->status !== 'draft') {
+            // Cek sisa kuota kelas untuk KRS yang sudah disubmit/diapprove
+            if ($kelas->sisa_kuota <= 0) {
+                throw new \Exception('Kuota kelas sudah penuh');
+            }
         }
 
         // Buat detail KRS
@@ -107,8 +111,8 @@ class KrsRepository implements KrsRepositoryInterface
             'status' => 'active',
         ]);
 
-        // Kurangi sisa kuota kelas
-        $kelas->decrement('sisa_kuota');
+        // Tidak mengurangi kuota di sini - akan dilakukan saat KRS diapprove
+        // untuk memastikan atomicity
 
         return $krsDetail;
     }

@@ -18,10 +18,10 @@ use Livewire\Attributes\On;
 class KrsPage extends Page
 {
     use HasPageShield;
-    
+
     protected static string $permissionName = 'krs_page';
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
-    protected static string $view = 'filament.pages.mahasiswa.krs-page';
+    protected static string $view = 'filament.pages.mahasiswa.krs-page-v4';
     protected static ?string $title = 'Kartu Rencana Studi';
     protected static ?string $slug = 'mahasiswa/krs';
     protected static ?string $navigationGroup = 'Mahasiswa';
@@ -63,9 +63,16 @@ class KrsPage extends Page
             return;
         }
 
-        // Load KRS mahasiswa
-        $this->krs = app(KrsRepositoryInterface::class)
-            ->getKrsByMahasiswaAndPeriode($mahasiswa->id, $this->activePeriod->id);
+        // Load KRS mahasiswa with necessary relationships for the view
+        $this->krs = KrsMahasiswa::with([
+            'krsDetails' => fn($query) => $query->where('status', 'active'),
+            'krsDetails.kelas.mataKuliah',
+            'krsDetails.kelas.dosen',
+            'krsDetails.kelas.jadwalKuliahs.ruangKuliah'
+        ])
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->where('periode_krs_id', $this->activePeriod->id)
+            ->first();
 
         // Load kelas tersedia
         $this->loadAvailableClasses();
@@ -79,7 +86,9 @@ class KrsPage extends Page
         $mahasiswa = Auth::user()->mahasiswa;
 
         $this->availableClasses = Kelas::with(['mataKuliah', 'dosen', 'jadwalKuliahs.ruangKuliah'])
-            ->where('program_studi_id', $mahasiswa->program_studi_id)
+            ->whereHas('mataKuliah', function ($query) use ($mahasiswa) {
+                $query->where('program_studi_id', $mahasiswa->program_studi_id);
+            })
             ->where('sisa_kuota', '>', 0)
             ->get()
             ->map(function ($kelas) {
@@ -93,8 +102,9 @@ class KrsPage extends Page
                     'jadwal' => $kelas->jadwalKuliahs->map(function ($jadwal) {
                         return [
                             'hari' => $jadwal->hari,
-                            'jam' => $jadwal->jam_mulai . ' - ' . $jadwal->jam_selesai,
-                            'ruang' => $jadwal->ruangKuliah->nama,
+                            'jam_mulai' => date('H:i', strtotime($jadwal->jam_mulai)),
+                            'jam_selesai' => date('H:i', strtotime($jadwal->jam_selesai)),
+                            'ruang' => $jadwal->ruangKuliah->nama_ruang,
                         ];
                     })->toArray(),
                     'is_taken' => $this->isClassTaken($kelas->id),
@@ -216,6 +226,32 @@ class KrsPage extends Page
         }
     }
 
+    public function cancelSubmit(): void
+    {
+        try {
+            if (!$this->krs) {
+                throw new \Exception('KRS tidak ditemukan');
+            }
+
+            app(KrsService::class)->resetKrsStatus($this->krs->id);
+
+            // Reload data
+            $this->loadKrsData();
+
+            Notification::make()
+                ->title('Submit KRS Dibatalkan')
+                ->body('KRS Anda kembali ke status draft dan dapat diubah kembali.')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Gagal Membatalkan Submit')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -225,35 +261,5 @@ class KrsPage extends Page
                 ->action(fn() => $this->loadKrsData())
                 ->visible(fn() => $this->activePeriod !== null),
         ];
-    }
-
-    public function getKrsStatusColor(): string
-    {
-        if (!$this->krs) {
-            return 'gray';
-        }
-
-        return match ($this->krs->status) {
-            'draft' => 'gray',
-            'submitted' => 'yellow',
-            'approved' => 'green',
-            'rejected' => 'red',
-            default => 'gray',
-        };
-    }
-
-    public function getKrsStatusLabel(): string
-    {
-        if (!$this->krs) {
-            return 'Belum Ada KRS';
-        }
-
-        return match ($this->krs->status) {
-            'draft' => 'Draft',
-            'submitted' => 'Menunggu Persetujuan',
-            'approved' => 'Disetujui',
-            'rejected' => 'Ditolak',
-            default => 'Tidak Diketahui',
-        };
     }
 }

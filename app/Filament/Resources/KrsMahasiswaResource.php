@@ -2,26 +2,23 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\KrsStatusEnum;
 use App\Filament\Resources\KrsMahasiswaResource\Pages;
 use App\Filament\Resources\KrsMahasiswaResource\RelationManagers;
 use App\Models\KrsMahasiswa;
-use App\Models\PeriodeKrs;
-use App\Models\Mahasiswa;
-use App\Models\Dosen;
 use App\Services\KrsService;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Table;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Filament\Notifications\Notification;
-use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 
 class KrsMahasiswaResource extends Resource implements HasShieldPermissions
 {
@@ -78,42 +75,27 @@ class KrsMahasiswaResource extends Resource implements HasShieldPermissions
         return $form
             ->schema([
                 Forms\Components\Select::make('mahasiswa_id')
-                    ->label('Mahasiswa')
                     ->relationship('mahasiswa', 'nama')
                     ->searchable()
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('periode_krs_id')
-                    ->label('Periode KRS')
                     ->relationship('periodeKrs', 'nama_periode')
                     ->searchable()
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('dosen_pa_id')
-                    ->label('Dosen PA')
                     ->relationship('dosenPa', 'nama')
                     ->searchable()
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('status')
-                    ->label('Status')
-                    ->options([
-                        'draft' => 'Draft',
-                        'submitted' => 'Submitted',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                    ])
+                    ->options(KrsStatusEnum::class)
                     ->required(),
                 Forms\Components\TextInput::make('total_sks')
-                    ->label('Total SKS')
                     ->numeric()
                     ->disabled(),
-                Forms\Components\TextInput::make('max_sks')
-                    ->label('Maksimum SKS')
-                    ->numeric()
-                    ->required(),
                 Forms\Components\Textarea::make('catatan_pa')
-                    ->label('Catatan Dosen PA')
                     ->columnSpanFull(),
             ]);
     }
@@ -123,59 +105,35 @@ class KrsMahasiswaResource extends Resource implements HasShieldPermissions
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('mahasiswa.nama')
-                    ->label('Mahasiswa')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('mahasiswa.nim')
-                    ->label('NIM')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('periodeKrs.nama_periode')
-                    ->label('Periode KRS')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('dosenPa.nama')
-                    ->label('Dosen PA')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'draft' => 'gray',
-                        'submitted' => 'warning',
-                        'approved' => 'success',
-                        'rejected' => 'danger',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'draft' => 'Draft',
-                        'submitted' => 'Submitted',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                        default => $state,
-                    })
+                    ->color(fn (KrsStatusEnum $state): string => $state->getColor())
+                    ->formatStateUsing(fn (KrsStatusEnum $state): string => $state->getLabel())
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_sks')
-                    ->label('Total SKS')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('tanggal_submit')
-                    ->label('Tanggal Submit')
                     ->dateTime('d M Y H:i')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('tanggal_approval')
-                    ->label('Tanggal Approval')
                     ->dateTime('d M Y H:i')
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->options([
-                        'draft' => 'Draft',
-                        'submitted' => 'Submitted',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                    ]),
+                    ->options(KrsStatusEnum::class),
                 SelectFilter::make('periode_krs_id')
                     ->label('Periode KRS')
                     ->relationship('periodeKrs', 'nama_periode'),
@@ -195,7 +153,7 @@ class KrsMahasiswaResource extends Resource implements HasShieldPermissions
                     ->modalDescription('Apakah Anda yakin ingin mereset status KRS ini menjadi draft? Tindakan ini akan memungkinkan mahasiswa untuk mengubah KRS kembali.')
                     ->modalSubmitActionLabel('Ya, Reset Status')
                     ->modalCancelActionLabel('Batal')
-                    ->visible(fn (KrsMahasiswa $record): bool => $record->status !== 'draft')
+                    ->visible(fn (KrsMahasiswa $record): bool => $record->status !== KrsStatusEnum::DRAFT)
                     ->action(function (KrsMahasiswa $record, KrsService $krsService) {
                         try {
                             $krsService->resetKrsStatus($record->id);
@@ -229,7 +187,7 @@ class KrsMahasiswaResource extends Resource implements HasShieldPermissions
                             $failedCount = 0;
 
                             foreach ($records as $record) {
-                                if ($record->status === 'draft') {
+                                if ($record->status === KrsStatusEnum::DRAFT) {
                                     $failedCount++;
                                     continue;
                                 }
