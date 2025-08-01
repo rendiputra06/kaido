@@ -26,7 +26,7 @@ class MataKuliahResource extends Resource implements HasShieldPermissions
     protected static ?string $title = 'Mata Kuliah';
     protected static ?string $navigationLabel = 'Mata Kuliah';
     protected static ?string $pluralModelLabel = 'Mata Kuliah';
-    
+
     public static function getPermissionPrefixes(): array
     {
         return [
@@ -52,11 +52,6 @@ class MataKuliahResource extends Resource implements HasShieldPermissions
                 Forms\Components\Select::make('program_studi_id')
                     ->relationship('programStudi', 'nama_prodi')
                     ->required(),
-                Forms\Components\Select::make('kurikulum_id')
-                    ->relationship('kurikulum', 'nama_kurikulum')
-                    ->searchable()
-                    ->preload()
-                    ->required(),
                 Forms\Components\TextInput::make('kode_mk')
                     ->required()
                     ->unique(ignoreRecord: true)
@@ -77,10 +72,13 @@ class MataKuliahResource extends Resource implements HasShieldPermissions
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('programStudi.nama_prodi')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('kurikulum.nama_kurikulum')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('kode_mk')->searchable(),
-                Tables\Columns\TextColumn::make('nama_mk')->searchable(),
+                Tables\Columns\TextColumn::make('programStudi.nama_prodi')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('kode_mk')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('nama_mk')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('sks'),
                 Tables\Columns\TextColumn::make('semester'),
             ])
@@ -91,7 +89,7 @@ class MataKuliahResource extends Resource implements HasShieldPermissions
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-   Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make(),
 
             ])
             ->bulkActions([

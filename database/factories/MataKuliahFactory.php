@@ -24,8 +24,10 @@ class MataKuliahFactory extends Factory
             'Struktur Data', 'Basis Data', 'Jaringan Komputer', 'Sistem Operasi', 'Ekonomi Mikro', 'Ekonomi Makro'
         ];
 
-        $namaMk = $this->faker->unique()->randomElement($mataKuliahIndonesia);
-        $kodeMk = 'MK-' . strtoupper(substr(str_replace(' ', '', $namaMk), 0, 3)) . $this->faker->unique()->numerify('###');
+        $namaMk = $this->faker->randomElement($mataKuliahIndonesia);
+        // Generate a more unique code with timestamp and random number
+        $prefix = strtoupper(substr(str_replace(' ', '', $namaMk), 0, 3));
+        $kodeMk = 'MK-' . $prefix . '-' . time() . $this->faker->randomNumber(3);
 
         return [
             'program_studi_id' => ProgramStudi::factory(),

@@ -78,11 +78,119 @@ class SemesterAktifSeeder extends Seeder
                 'tgl_selesai' => now()->addMonth(),
             ]);
 
-            // 7. Mata Kuliah
-            $mataKuliahs = MataKuliah::factory(10)->create([
-                'kurikulum_id' => $kurikulum->id,
-                'program_studi_id' => $prodi->id,
-            ]);
+            // 7. Generate unique course codes
+            $usedCodes = [];
+            $generateUniqueCode = function($name) use (&$usedCodes) {
+                do {
+                    $prefix = strtoupper(substr(str_replace(' ', '', $name), 0, 3));
+                    $code = 'MK' . $prefix . rand(100, 999);
+                } while (in_array($code, $usedCodes));
+                $usedCodes[] = $code;
+                return $code;
+            };
+            
+            // 8. Mata Kuliah for Islamic Economics program
+            $mataKuliahs = collect();
+            $mataKuliahEkonomiIslam = [
+                // Semester 1
+                'Pengantar Ekonomi Islam', 'Fiqh Muamalah', 'Bahasa Arab Ekonomi', 'Pengantar Bisnis Syariah',
+                'Matematika Ekonomi', 'Bahasa Inggris Bisnis', 'Pendidikan Agama Islam', 'Kewarganegaraan',
+                
+                // Semester 2
+                'Akuntansi Syariah', 'Ekonomi Mikro Islam', 'Sejarah Pemikiran Ekonomi Islam', 'Bahasa Indonesia',
+                'Statistika Ekonomi', 'Manajemen Syariah', 'Pendidikan Pancasila', 'Kewirausahaan Syariah',
+                
+                // Semester 3
+                'Ekonomi Makro Islam', 'Manajemen Keuangan Syariah', 'Hukum Bisnis Syariah', 'Metodologi Penelitian',
+                'Perbankan Syariah', 'Etika Bisnis Islam',
+                
+                // Semester 4
+                'Pasar Modal Syariah', 'Manajemen Zakat dan Wakaf', 'Ekonomi Pembangunan Islam', 'Komunikasi Bisnis',
+                'Asuransi Syariah', 'Koperasi Syariah',
+                
+                // Semester 5
+                'Ekonomi Moneter Islam', 'Manajemen Resiko Syariah', 'Ekonomi Internasional Islam',
+                'Manajemen Sumber Daya Manusia Syariah',
+                
+                // Semester 6
+                'Akuntansi Lembaga Keuangan Syariah', 'Perekonomian Indonesia', 'Studi Kelayakan Bisnis Syariah',
+                'Kepemimpinan dalam Islam',
+                
+                // Semester 7
+                'Magang Kerja', 'Metodologi Penelitian Lanjutan', 'Kewirausahaan Syariah Lanjutan',
+                
+                // Semester 8
+                'Skripsi', 'Studi Kasus Bisnis Syariah'
+            ];
+            
+            // Create mata kuliah with different semesters
+            $courseIndex = 0;
+            $semesterData = [];
+            
+            for ($semester = 1; $semester <= 8; $semester++) {
+                // Get courses for this semester (4 courses for semesters 1-4, 2 courses for semesters 5-8)
+                $coursesPerSemester = $semester <= 4 ? 4 : 2;
+                $mkSemester = collect();
+                
+                for ($i = 0; $i < $coursesPerSemester && $courseIndex < count($mataKuliahEkonomiIslam); $i++, $courseIndex++) {
+                    $namaMk = $mataKuliahEkonomiIslam[$courseIndex];
+                    $kodeMk = $generateUniqueCode($namaMk);
+                    
+                    $mk = MataKuliah::create([
+                        'program_studi_id' => $prodi->id,
+                        'kode_mk' => $kodeMk,
+                        'nama_mk' => $namaMk,
+                        'sks' => $semester <= 4 ? 3 : 4, // 3 SKS for semesters 1-4, 4 SKS for semesters 5-8
+                        'semester' => $semester,
+                    ]);
+                    
+                    // Store semester and type information
+                    $isWajib = true; // Most courses are wajib in this curriculum
+                    $semesterData[$mk->id] = [
+                        'semester_ditawarkan' => $semester,
+                        'jenis' => $isWajib ? 'wajib' : 'pilihan',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    
+                    $mkSemester->push($mk);
+                }
+                
+                // Attach to kurikulum with semester and type
+                foreach ($mkSemester as $mk) {
+                    $kurikulum->mataKuliahs()->attach($mk->id, $semesterData[$mk->id]);
+                }
+                
+                $mataKuliahs = $mataKuliahs->merge($mkSemester);
+            }
+            
+            // Create prerequisite relationships
+            foreach ($mataKuliahs as $mk) {
+                $semesterMk = $semesterData[$mk->id]['semester_ditawarkan'];
+                
+                // Only add prerequisites to courses in semester 3 and above
+                if ($semesterMk >= 3) {
+                    // Get courses from previous semesters as prerequisites
+                    $prerequisites = $mataKuliahs->filter(function ($prasyarat) use ($semesterMk, $mk, $semesterData) {
+                        $semesterPrasyarat = $semesterData[$prasyarat->id]['semester_ditawarkan'];
+                        return $semesterPrasyarat < $semesterMk && 
+                               $prasyarat->id != $mk->id;
+                    });
+                    
+                    // Add 1-3 random prerequisites
+                    if ($prerequisites->isNotEmpty()) {
+                        $prerequisitesCount = min(rand(1, 3), $prerequisites->count());
+                        $selectedPrerequisites = $prerequisites->random($prerequisitesCount);
+                        
+                        foreach ($selectedPrerequisites as $prasyarat) {
+                            DB::table('matakuliah_prasyarat')->insert([
+                                'matakuliah_id' => $mk->id,
+                                'prasyarat_id' => $prasyarat->id,
+                            ]);
+                        }
+                    }
+                }
+            }
 
             // 8. Kelas, Jadwal, dan Borang Nilai
             $kelasList = collect();

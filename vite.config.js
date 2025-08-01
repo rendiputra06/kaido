@@ -10,6 +10,7 @@ export default defineConfig({
                 "app/Livewire/**",
                 "app/Filament/**",
                 "app/Providers/**",
+                "resources/views/**",  // Add this line
             ],
         }),
     ],

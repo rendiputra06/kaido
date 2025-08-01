@@ -66,12 +66,15 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                Pages\Dashboard::class, // Deactivated custom dashboard
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                // Widgets\AccountWidget::class, // Removed for a cleaner look
+                // Widgets\FilamentInfoWidget::class, // Removed default widget
+                \App\Filament\Widgets\DashboardStatsOverview::class,
+                \App\Filament\Widgets\KrsStatusOverview::class, // Temporarily disabled due to routing error
+                \App\Filament\Widgets\JadwalKuliahWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

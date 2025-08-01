@@ -79,11 +79,7 @@ class ShieldSeederV2 extends Seeder
 
             'dosen' => [
                 'description' => 'Dosen - Akses untuk pengajaran dan pembimbingan',
-                'resources' => [
-                    'dosen', 'mahasiswa', 'mata_kuliah', 'kurikulum',
-                    'jadwal_kuliah', 'kelas', 'borang_nilai', 'grade_scale',
-                    'komponen_nilai'
-                ],
+                'resources' => [],
                 'pages' => [
                     'dosen_atur_borang_nilai', 'dosen_input_nilai', 
                     'dosen_krs_approval', 'laporan_jadwal'
@@ -96,10 +92,7 @@ class ShieldSeederV2 extends Seeder
 
             'mahasiswa' => [
                 'description' => 'Mahasiswa - Akses untuk akademik pribadi',
-                'resources' => [
-                    'mata_kuliah', 'kurikulum', 'jadwal_kuliah',
-                    'kelas', 'grade_scale', 'periode_krs'
-                ],
+                'resources' => [],
                 'pages' => [
                     'mahasiswa_krs'
                 ],

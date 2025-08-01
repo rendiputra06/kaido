@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         // Panggil seeder untuk data master dan role terlebih dahulu
         $this->call([
-            ShieldSeeder::class,
+            ShieldSeederV2::class,
             PermissionDosenSeeder::class,
             KomponenNilaiSeeder::class,
             GradeScaleSeeder::class,

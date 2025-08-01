@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('kurikulum_id')->constrained()->cascadeOnDelete();
             $table->foreignId('mata_kuliah_id')->constrained()->cascadeOnDelete();
+            $table->integer('semester_ditawarkan')->comment('Semester ideal untuk mengambil mata kuliah ini');
+            $table->enum('jenis', ['wajib', 'pilihan'])->default('wajib');
             $table->timestamps();
         });
     }

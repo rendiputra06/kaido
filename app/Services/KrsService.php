@@ -8,6 +8,8 @@ use App\Interfaces\PeriodeKrsRepositoryInterface;
 use App\Interfaces\JadwalServiceInterface;
 use App\Models\KrsMahasiswa;
 use App\Models\KrsDetail;
+use App\Models\Mahasiswa;
+use App\Models\Kelas;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -358,6 +360,124 @@ class KrsService implements KrsServiceInterface
         $this->krsRepository->updateKrs($krsId, ['total_sks' => $totalSks]);
     }
     
+    /**
+     * Comprehensive enrollment validation
+     * 
+     * Validates all requirements for a student to enroll in a class
+     */
+    public function canEnroll(Mahasiswa $mahasiswa, Kelas $kelas): array
+    {
+        try {
+            // Get current active KRS for the student
+            $periode = $this->periodeRepository->getActivePeriod();
+            if (!$periode) {
+                return ['success' => false, 'message' => 'Tidak ada periode KRS yang aktif'];
+            }
+            
+            $krs = $this->krsRepository->getKrsByMahasiswaAndPeriode($mahasiswa->id, $periode->id);
+            if (!$krs) {
+                return ['success' => false, 'message' => 'KRS belum dibuat untuk periode ini'];
+            }
+            
+            if ($krs->status !== \App\Enums\KrsStatusEnum::DRAFT) {
+                return ['success' => false, 'message' => 'KRS sudah disubmit, tidak bisa menambah mata kuliah'];
+            }
+            
+            // 1. Curriculum validation
+            $curriculumValidation = $this->validateCurriculum($mahasiswa->id, $kelas->id);
+            if (!$curriculumValidation['success']) {
+                return $curriculumValidation;
+            }
+            
+            // 2. Prerequisite validation
+            try {
+                $this->validatePrerequisites($mahasiswa->id, $kelas->id);
+            } catch (\Exception $e) {
+                return ['success' => false, 'message' => $e->getMessage()];
+            }
+            
+            // 3. SKS limit validation
+            try {
+                $this->validateMaxSks($krs->id, $kelas->id);
+            } catch (\Exception $e) {
+                return ['success' => false, 'message' => $e->getMessage()];
+            }
+            
+            // 4. Class quota validation
+            $quotaValidation = $this->validateClassQuota($kelas->id);
+            if (!$quotaValidation['success']) {
+                return $quotaValidation;
+            }
+            
+            // 5. Schedule conflict validation
+            try {
+                $this->validateScheduleConflict($krs->id, $kelas->id);
+            } catch (\Exception $e) {
+                return ['success' => false, 'message' => $e->getMessage()];
+            }
+            
+            return ['success' => true, 'message' => 'Mata kuliah dapat diambil'];
+            
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Terjadi kesalahan: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Validasi kurikulum mata kuliah
+     * 
+     * Memeriksa apakah mata kuliah dari kelas ini ada di kurikulum mahasiswa
+     */
+    private function validateCurriculum(int $mahasiswaId, int $kelasId): array
+    {
+        $mahasiswa = \App\Models\Mahasiswa::with('programStudi.kurikulums')->find($mahasiswaId);
+        $kelas = \App\Models\Kelas::with('mataKuliah')->find($kelasId);
+        
+        if (!$mahasiswa || !$kelas || !$kelas->mataKuliah) {
+            return ['success' => false, 'message' => 'Data mahasiswa atau kelas tidak valid'];
+        }
+        
+        // Get active curriculum for the student's program
+        $kurikulum = $mahasiswa->programStudi->kurikulums()
+            ->where('status', 'aktif')
+            ->first();
+            
+        if (!$kurikulum) {
+            return ['success' => false, 'message' => 'Kurikulum aktif tidak ditemukan untuk program studi ini'];
+        }
+        
+        // Check if the course is in the curriculum
+        $mataKuliahInCurriculum = $kurikulum->mataKuliahs()
+            ->where('mata_kuliah_id', $kelas->mataKuliah->id)
+            ->first();
+            
+        if (!$mataKuliahInCurriculum) {
+            return ['success' => false, 'message' => "Mata kuliah '{$kelas->mataKuliah->nama_mk}' tidak ada dalam kurikulum Anda"];
+        }
+        
+        return ['success' => true, 'message' => 'Mata kuliah sesuai dengan kurikulum'];
+    }
+    
+    /**
+     * Validasi kuota kelas
+     * 
+     * Memeriksa apakah masih ada kuota tersedia di kelas
+     */
+    private function validateClassQuota(int $kelasId): array
+    {
+        $kelas = \App\Models\Kelas::find($kelasId);
+        
+        if (!$kelas) {
+            return ['success' => false, 'message' => 'Kelas tidak ditemukan'];
+        }
+        
+        if ($kelas->sisa_kuota <= 0) {
+            return ['success' => false, 'message' => 'Kuota kelas sudah penuh'];
+        }
+        
+        return ['success' => true, 'message' => "Kuota tersedia: {$kelas->sisa_kuota} dari {$kelas->kuota}"];
+    }
+
     /**
      * Validasi prasyarat mata kuliah
      * 

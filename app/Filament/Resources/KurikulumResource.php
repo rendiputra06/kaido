@@ -58,11 +58,6 @@ class KurikulumResource extends Resource implements HasShieldPermissions
                 Forms\Components\TextInput::make('tahun_mulai')
                     ->required()
                     ->numeric(),
-                Forms\Components\Select::make('mata_kuliahs')
-                    ->relationship('mataKuliahs', 'nama_mk')
-                    ->multiple()
-                    ->preload()
-                    ->searchable(),
             ]);
     }
 
@@ -80,9 +75,9 @@ class KurikulumResource extends Resource implements HasShieldPermissions
                     ->label('Program Studi')
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -94,7 +89,7 @@ class KurikulumResource extends Resource implements HasShieldPermissions
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\MataKuliahRelationManager::class,
         ];
     }
 
@@ -104,6 +99,7 @@ class KurikulumResource extends Resource implements HasShieldPermissions
             'index' => Pages\ListKurikulums::route('/'),
             'create' => Pages\CreateKurikulum::route('/create'),
             'edit' => Pages\EditKurikulum::route('/{record}/edit'),
+            'view' => Pages\ViewKurikulum::route('/{record}'),
         ];
     }
 }

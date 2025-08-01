@@ -18,11 +18,18 @@ class MataKuliah extends Model
         return $this->belongsTo(ProgramStudi::class);
     }
 
-    public function kurikulum(): BelongsTo
+    public function kurikulums(): BelongsToMany
+    {
+        return $this->belongsToMany(Kurikulum::class, 'kurikulum_matakuliah')
+            ->withPivot('semester_ditawarkan', 'jenis')
+            ->withTimestamps();
+    }
+
+    public function kurikulum()
     {
         return $this->belongsTo(Kurikulum::class);
     }
-    
+
     /**
      * Mendapatkan mata kuliah yang menjadi prasyarat untuk mata kuliah ini
      */
@@ -30,12 +37,12 @@ class MataKuliah extends Model
     {
         return $this->belongsToMany(
             MataKuliah::class,
-            'mata_kuliah_prasyarats',
-            'mata_kuliah_id',
+            'matakuliah_prasyarat',
+            'matakuliah_id',
             'prasyarat_id'
         );
     }
-    
+
     /**
      * Mendapatkan mata kuliah yang memiliki prasyarat mata kuliah ini
      */
@@ -43,9 +50,9 @@ class MataKuliah extends Model
     {
         return $this->belongsToMany(
             MataKuliah::class,
-            'mata_kuliah_prasyarats',
+            'matakuliah_prasyarat',
             'prasyarat_id',
-            'mata_kuliah_id'
+            'matakuliah_id'
         );
     }
 }

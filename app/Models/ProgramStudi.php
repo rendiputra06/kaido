@@ -17,4 +17,9 @@ class ProgramStudi extends Model
     protected $guarded = ['id'];
     // add hidden
     protected $hidden = ['created_at', 'updated_at'];
+
+    public function kurikulums()
+    {
+        return $this->hasMany(Kurikulum::class);
+    }
 }
