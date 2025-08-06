@@ -32,17 +32,27 @@ class KrsPage extends Page
     public $activePeriod = null;
     public $totalSks = 0;
     public $maxSks = 24;
+    public $mahasiswa = null;
+    public $semesterSekarang = 1;
+    
+    // Search and filter properties
+    public $search = '';
+    public $semesterFilter = '';
+    public $jenisFilter = '';
 
     public function mount(): void
     {
+        $this->mahasiswa = Auth::user()->mahasiswa;
         $this->loadKrsData();
     }
 
     public function loadKrsData(): void
     {
-        $mahasiswa = Auth::user()->mahasiswa;
+        if (!$this->mahasiswa) {
+            $this->mahasiswa = Auth::user()->mahasiswa;
+        }
 
-        if (!$mahasiswa) {
+        if (!$this->mahasiswa) {
             Notification::make()
                 ->title('Data Mahasiswa Tidak Ditemukan')
                 ->body('Silakan hubungi admin untuk memperbaiki data mahasiswa Anda.')
@@ -70,9 +80,12 @@ class KrsPage extends Page
             'krsDetails.kelas.dosen',
             'krsDetails.kelas.jadwalKuliahs.ruangKuliah'
         ])
-            ->where('mahasiswa_id', $mahasiswa->id)
+            ->where('mahasiswa_id', $this->mahasiswa->id)
             ->where('periode_krs_id', $this->activePeriod->id)
             ->first();
+            
+        // Hitung semester sekarang berdasarkan angkatan dan periode aktif
+        $this->hitungSemesterSekarang();
 
         // Load kelas tersedia
         $this->loadAvailableClasses();
@@ -81,36 +94,169 @@ class KrsPage extends Page
         $this->calculateTotalSks();
     }
 
+    protected function hitungSemesterSekarang(): void
+    {
+        if (!$this->mahasiswa || !$this->activePeriod) {
+            $this->semesterSekarang = 1;
+            return;
+        }
+        
+        try {
+            // Get the active academic year from the TahunAjaran model
+            $tahunAjaran = \App\Models\TahunAjaran::find($this->activePeriod->tahun_ajaran_id);
+            
+            if (!$tahunAjaran) {
+                throw new \Exception('Tahun ajaran tidak ditemukan');
+            }
+            
+            // Parse the academic year (format: '2023/2024')
+            $tahunAkademik = explode('/', $tahunAjaran->tahun_akademik);
+            if (count($tahunAkademik) !== 2) {
+                throw new \Exception('Format tahun akademik tidak valid');
+            }
+            
+            $tahunAwal = (int)$tahunAkademik[0];
+            $tahunMasuk = (int)$this->mahasiswa->angkatan;
+            
+            // Calculate semester (1 for Ganjil, 2 for Genap)
+            $semesterMultiplier = strtolower($tahunAjaran->semester) === 'ganjil' ? 1 : 2;
+            
+            // Calculate current semester
+            $semester = (($tahunAwal - $tahunMasuk) * 2) + $semesterMultiplier;
+            
+            // Ensure semester is between 1 and 14
+            $this->semesterSekarang = max(1, min(14, $semester));
+            
+        } catch (\Exception $e) {
+            // Fallback to default semester if there's an error
+            $this->semesterSekarang = 1;
+            \Log::error('Error calculating current semester: ' . $e->getMessage());
+        }
+    }
+
     public function loadAvailableClasses(): void
     {
-        $mahasiswa = Auth::user()->mahasiswa;
+        if (!$this->mahasiswa) {
+            $this->availableClasses = [];
+            return;
+        }
+        
+        // Reset semester filter to current semester if not set
+        if (empty($this->semesterFilter)) {
+            $this->semesterFilter = $this->semesterSekarang;
+        }
+        
+        // Get active curriculum for the student's program
+        $kurikulum = $this->mahasiswa->programStudi->kurikulums()
+            ->first();
 
-        $this->availableClasses = Kelas::with(['mataKuliah', 'dosen', 'jadwalKuliahs.ruangKuliah'])
-            ->whereHas('mataKuliah', function ($query) use ($mahasiswa) {
-                $query->where('program_studi_id', $mahasiswa->program_studi_id);
-            })
+        if (!$kurikulum) {
+            Notification::make()
+                ->title('Kurikulum Tidak Ditemukan')
+                ->body('Tidak ada kurikulum aktif untuk program studi Anda.')
+                ->warning()
+                ->send();
+            return;
+        }
+
+        // Get courses in the curriculum with their pivot data
+        $query = $kurikulum->mataKuliahs()
+            ->withPivot(['semester_ditawarkan', 'jenis'])
+            ->wherePivot('semester_ditawarkan', '<=', $this->semesterSekarang);
+        
+        $mataKuliahKurikulum = $query->get();
+        // Get class IDs that are in the curriculum
+        $mataKuliahIds = $mataKuliahKurikulum->pluck('id');
+
+        // Get available classes for the current academic year
+        $availableClasses = Kelas::with([
+                'mataKuliah',
+                'dosen',
+                'jadwalKuliahs.ruangKuliah',
+                'mataKuliah.prasyarats',
+                'tahunAjaran' // Eager load tahunAjaran relationship
+            ])
+            ->whereIn('mata_kuliah_id', $mataKuliahIds)
             ->where('sisa_kuota', '>', 0)
+            ->where('tahun_ajaran_id', $this->activePeriod->tahun_ajaran_id)
             ->get()
-            ->map(function ($kelas) {
+            ->map(function ($kelas) use ($mataKuliahKurikulum) {
+                // Initialize status
+                $kelas->can_be_taken = true;
+                $kelas->status_message = 'Dapat diambil';
+                $kelas->status_type = 'success';
+                
+                // Check if student has completed prerequisites
+                $prasyaratTidakTerpenuhi = [];
+                
+                foreach ($kelas->mataKuliah->prasyarats as $prasyarat) {
+                    $lulus = $this->mahasiswa->riwayatNilai()
+                        ->where('mata_kuliah_id', $prasyarat->id)
+                        ->where('nilai_akhir', '>=', 60)
+                        ->exists();
+                        
+                    if (!$lulus) {
+                        $prasyaratTidakTerpenuhi[] = $prasyarat->nama_mk;
+                    }
+                }
+                
+                if (!empty($prasyaratTidakTerpenuhi)) {
+                    $kelas->can_be_taken = false;
+                    $kelas->status_message = 'Belum lulus prasyarat: ' . implode(', ', $prasyaratTidakTerpenuhi);
+                    $kelas->status_type = 'warning';
+                }
+                
+                return $kelas;
+            });
+            
+        // Filter based on semester and type if needed
+        $availableClasses = $availableClasses->filter(function($kelas) {
+            if (!empty($this->semesterFilter) && $kelas->mataKuliah->semester != $this->semesterFilter) {
+                return false;
+            }
+            if (!empty($this->jenisFilter) && $kelas->mataKuliah->jenis != $this->jenisFilter) {
+                return false;
+            }
+            return true;
+        });
+        
+        // Transform the final output
+        $availableClasses = $availableClasses->map(function ($kelas) use ($mataKuliahKurikulum) {
+            $mkKurikulum = $mataKuliahKurikulum->firstWhere('id', $kelas->mata_kuliah_id);
+            $jenis = $mkKurikulum ? $mkKurikulum->pivot->jenis : 'wajib';
+                $semester = $mkKurikulum ? $mkKurikulum->pivot->semester_ditawarkan : 1;
+                
                 return [
                     'id' => $kelas->id,
                     'nama' => $kelas->nama,
                     'mata_kuliah' => $kelas->mataKuliah->nama_mk,
+                    'kode_mk' => $kelas->mataKuliah->kode_mk,
                     'dosen' => $kelas->dosen->nama,
                     'sks' => $kelas->mataKuliah->sks,
                     'sisa_kuota' => $kelas->sisa_kuota,
+                    'semester' => $semester,
+                    'jenis' => $jenis,
+                    'prasyarat' => $kelas->mataKuliah->prasyarats->pluck('nama_mk')->toArray(),
                     'jadwal' => $kelas->jadwalKuliahs->map(function ($jadwal) {
                         return [
                             'hari' => $jadwal->hari,
                             'jam_mulai' => date('H:i', strtotime($jadwal->jam_mulai)),
                             'jam_selesai' => date('H:i', strtotime($jadwal->jam_selesai)),
-                            'ruang' => $jadwal->ruangKuliah->nama_ruang,
+                            'ruang' => $jadwal->ruangKuliah->nama_ruang ?? 'Belum ditentukan',
                         ];
                     })->toArray(),
                     'is_taken' => $this->isClassTaken($kelas->id),
                 ];
             })
+            ->sortBy([
+                ['semester', 'asc'],
+                ['jenis', 'desc'], // Wajib first, then pilihan
+                ['kode_mk', 'asc']
+            ])
+            ->values()
             ->toArray();
+            
+        $this->availableClasses = $availableClasses;
     }
 
     public function isClassTaken($kelasId): bool
@@ -144,16 +290,42 @@ class KrsPage extends Page
     {
         try {
             $mahasiswa = Auth::user()->mahasiswa;
+            $kelas = Kelas::with(['mataKuliah.prasyarats'])->findOrFail($kelasId);
 
+            // Check prerequisites
+            $prerequisites = $kelas->mataKuliah->prasyarats;
+            if ($prerequisites->isNotEmpty()) {
+                $missingPrerequisites = [];
+                
+                foreach ($prerequisites as $prasyarat) {
+                    $hasPassed = $mahasiswa->riwayatNilai()
+                        ->where('mata_kuliah_id', $prasyarat->id)
+                        ->where('nilai_akhir', '>=', 60)
+                        ->exists();
+                    
+                    if (!$hasPassed) {
+                        $missingPrerequisites[] = $prasyarat->nama_mk;
+                    }
+                }
+                
+                if (!empty($missingPrerequisites)) {
+                    throw new \Exception(
+                        'Anda belum memenuhi prasyarat untuk mata kuliah ini. ' .
+                        'Prasyarat yang belum terpenuhi: ' . implode(', ', $missingPrerequisites)
+                    );
+                }
+            }
+
+            // Create KRS if not exists
             if (!$this->krs) {
-                // Buat KRS baru
                 $this->krs = app(KrsService::class)->createKrs(
                     $mahasiswa->id,
                     $this->activePeriod->id,
-                    $mahasiswa->dosen_pa_id ?? 1 // Default dosen PA
+                    $mahasiswa->dosen_pa_id ?? 1
                 );
             }
 
+            // Add the class
             app(KrsService::class)->addMataKuliah($this->krs->id, $kelasId);
 
             // Reload data

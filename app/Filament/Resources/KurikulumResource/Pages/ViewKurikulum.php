@@ -22,6 +22,12 @@ class ViewKurikulum extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('back')
+            ->label('Kembali')
+            ->url(fn () => $this->getResource()::getUrl()) // menuju ke index resource
+            ->color('gray')
+            ->icon('heroicon-m-arrow-left')
+            ->outlined(),
             Actions\EditAction::make(),
         ];
     }

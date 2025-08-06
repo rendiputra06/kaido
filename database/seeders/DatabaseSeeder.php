@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Panggil seeder utama yang akan men-generate data transaksional
-        $this->call(SemesterAktifSeeder::class);
+        $this->call([SemesterAktifSeeder::class, NilaiMahasiswaSeeder::class]);
 
         // Membuat user-user spesifik untuk testing
         $admin = User::factory()->create([

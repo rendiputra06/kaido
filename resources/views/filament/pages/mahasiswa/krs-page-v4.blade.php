@@ -15,13 +15,49 @@
             
             {{-- Header --}}
             <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4">
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-800">KRS Workspace</h1>
-                        <p class="text-sm text-gray-500">
-                            Periode: {{ $this->activePeriod?->nama_periode ?? 'Tidak Aktif' }}
-                            ({{ $this->activePeriod ? $this->activePeriod->tgl_mulai->format('d M') . ' - ' . $this->activePeriod->tgl_selesai->format('d M') : 'N/A' }})
-                        </p>
+                <div class="space-y-4">
+                    {{-- Student Info --}}
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Nama</p>
+                                <p class="font-semibold text-gray-800">{{ $this->mahasiswa?->nama ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">NIM</p>
+                                <p class="font-semibold text-gray-800">{{ $this->mahasiswa?->nim ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Program Studi</p>
+                                <p class="font-semibold text-gray-800">{{ $this->mahasiswa?->programStudi?->nama_prodi ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Angkatan</p>
+                                <p class="font-semibold text-gray-800">{{ $this->mahasiswa?->angkatan ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Semester Sekarang</p>
+                                <p class="font-semibold text-gray-800">{{ $this->semesterSekarang ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Dosen PA</p>
+                                <p class="font-semibold text-gray-800">{{ $this->mahasiswa?->dosenPa?->nama ?? 'Belum ada dosen PA' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {{-- Period Info --}}
+                    <div class="flex flex-wrap items-center justify-between p-4 rounded-lg border border-blue-100 gap-4">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-800">KRS Workspace</h1>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">
+                                Periode: {{ $this->activePeriod?->nama_periode ?? 'Tidak Aktif' }} ({{ $this->activePeriod ? $this->activePeriod->semester : 'N/A' }})
+                                <br>
+                                {{ $this->activePeriod ? $this->activePeriod->tgl_mulai->format('d M Y') . ' - ' . $this->activePeriod->tgl_selesai->format('d M Y') : '' }}
+                            </p>
+                        </div>
                     </div>
                     <div class="flex items-center space-x-4">
                         <div class="text-center">
@@ -71,19 +107,12 @@
             </div>
 
             {{-- Workspace --}}
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
+            <div class="grid grid-cols-2 lg:grid-cols-2 gap-6">
                 {{-- Kolom Kiri: Katalog Kelas --}}
                 <div class="bg-white rounded-xl shadow-md border border-gray-200 flex flex-col">
                     <div class="p-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-800">Katalog Kelas</h2>
                         <p class="text-sm text-gray-500">Pilih kelas yang akan Anda ambil semester ini.</p>
-                        {{-- Pencarian Kelas --}}
-                        <input
-                            type="text"
-                            placeholder="Cari kelas..."
-                            class="block w-full mt-3 border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
-                        />
                     </div>
                     <div class="p-4 space-y-3 overflow-y-auto hide-scrollbar" style="max-height: 60vh;">
                         @forelse($this->availableClasses as $kelas)
@@ -93,7 +122,27 @@
                                         <div class="flex-grow">
                                             <h3 class="font-semibold text-gray-800">{{ $kelas['mata_kuliah'] }}</h3>
                                             <p class="text-xs text-gray-500">{{ $kelas['dosen'] }}</p>
-                                            <p class="text-xs text-gray-500">{{ $kelas['sks'] }} SKS - Kuota: {{ $kelas['sisa_kuota'] }}</p>
+                                            <div class="flex items-center space-x-2 text-xs text-gray-500">
+                                                <span>{{ $kelas['sks'] }} SKS</span>
+                                                <span>•</span>
+                                                <span>Kuota: {{ $kelas['sisa_kuota'] }}</span>
+                                                <span>•</span>
+                                                <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $kelas['jenis'] === 'wajib' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                                    {{ ucfirst($kelas['jenis']) }}
+                                                </span>
+                                                <span>•</span>
+                                                <span>Semester {{ $kelas['semester'] }}</span>
+                                            </div>
+                                            
+                                            {{-- Prasyarat --}}
+                                            @if(!empty($kelas['prasyarat']))
+                                                <div class="mt-1">
+                                                    <p class="text-xs text-gray-500">
+                                                        <span class="font-medium">Prasyarat:</span> 
+                                                        {{ implode(', ', $kelas['prasyarat']) }}
+                                                    </p>
+                                                </div>
+                                            @endif
                                             
                                             {{-- Jadwal ditampilkan langsung --}}
                                             <div class="mt-2 space-y-1">

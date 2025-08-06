@@ -38,7 +38,7 @@ class SemesterAktifSeeder extends Seeder
             $ruangan = RuangKuliah::factory(5)->create();
 
             // 4. Dosen (dengan sinkronisasi nama dari User)
-            $dosens = Dosen::factory(5)->make()->each(function ($dosen) {
+            $dosens = Dosen::factory(2)->make()->each(function ($dosen) {
                 $user = User::factory()->create([
                     'name' => fake('id_ID')->name,
                     'email' => fake()->unique()->safeEmail,
@@ -50,7 +50,10 @@ class SemesterAktifSeeder extends Seeder
             });
 
             // 5. Mahasiswa (dengan sinkronisasi nama dari User)
-            $mahasiswas = Mahasiswa::factory(50)->make(['program_studi_id' => $prodi->id])->each(function ($mahasiswa) {
+            $mahasiswas = Mahasiswa::factory(10)->make([
+                'program_studi_id' => $prodi->id,
+                'angkatan' => 2024 // Set semua mahasiswa angkatan 2024
+            ])->each(function ($mahasiswa) {
                 $user = User::factory()->create([
                     'name' => fake('id_ID')->name,
                     'email' => fake()->unique()->safeEmail,
@@ -61,15 +64,30 @@ class SemesterAktifSeeder extends Seeder
                 $mahasiswa->save();
             });
 
-            // 5.1. Penetapan Dosen PA
+            // 5.1. Penetapan Dosen PA (5 mahasiswa per dosen)
             $dosenIds = $dosens->pluck('id');
-            foreach ($mahasiswas as $mahasiswa) {
-                $mahasiswa->update(['dosen_pa_id' => $dosenIds->random()]);
+            $mahasiswaChunks = $mahasiswas->chunk(5); // Bagi mahasiswa menjadi 2 kelompok (5 per dosen)
+            
+            foreach ($mahasiswaChunks as $index => $chunk) {
+                $dosenId = $dosenIds[$index] ?? $dosenIds->last(); // Jika lebih dari 2 dosen, gunakan dosen terakhir
+                foreach ($chunk as $mahasiswa) {
+                    $mahasiswa->update(['dosen_pa_id' => $dosenId]);
+                }
             }
             $mahasiswas->fresh(); // Refresh data
 
             // 6. Tahun Ajaran & Periode KRS Aktif
-            $tahunAjaran = TahunAjaran::factory()->create(['nama' => '2024/2025 Ganjil', 'is_active' => true]);
+            $tahunAjaran = TahunAjaran::firstOrCreate(
+                ['kode' => '20241'],
+                [
+                    'nama' => '2024/2025 Ganjil',
+                    'semester' => 'Ganjil',
+                    'tahun_akademik' => '2024/2025',
+                    'tgl_mulai' => now()->subYear()->startOfYear(),
+                    'tgl_selesai' => now()->subYear()->startOfYear()->addMonths(5),
+                    'is_active' => false,
+                ]
+            );
             $periodeKrs = PeriodeKrs::factory()->create([
                 'nama_periode' => 'Pengisian KRS Ganjil 2024/2025',
                 'tahun_ajaran_id' => $tahunAjaran->id,

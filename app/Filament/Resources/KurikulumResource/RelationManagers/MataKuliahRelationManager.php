@@ -86,19 +86,32 @@ class MataKuliahRelationManager extends RelationManager
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->form([
-                        Forms\Components\TextInput::make('pivot.semester_ditawarkan')
+                        Forms\Components\TextInput::make('semester_ditawarkan')
                             ->label('Semester')
                             ->numeric()
                             ->minValue(1)
                             ->maxValue(8)
                             ->required(),
-                        Forms\Components\Select::make('pivot.jenis')
+                        Forms\Components\Select::make('jenis')
                             ->options([
                                 'wajib' => 'Wajib',
                                 'pilihan' => 'Pilihan',
                             ])
                             ->required(),
-                    ]),
+                    ])
+                    ->using(function (array $data, $record) {
+                        $this->getOwnerRecord()->mataKuliahs()->updateExistingPivot($record->id, [
+                            'semester_ditawarkan' => $data['semester_ditawarkan'],
+                            'jenis' => $data['jenis'],
+                        ]);
+                        return $record;
+                    })
+                    ->fillForm(function ($record) {
+                        return [
+                            'semester_ditawarkan' => $record->pivot->semester_ditawarkan,
+                            'jenis' => $record->pivot->jenis,
+                        ];
+                    }),
                 Tables\Actions\DetachAction::make(),
             ])
             ->bulkActions([

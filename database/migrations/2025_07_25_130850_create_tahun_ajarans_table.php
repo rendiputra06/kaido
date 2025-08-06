@@ -13,12 +13,17 @@ return new class extends Migration
     {
         Schema::create('tahun_ajarans', function (Blueprint $table) {
             $table->id();
-            $table->string('kode')->unique();
+            $table->string('kode', 5)->unique(); // Format: YYYYS (S=1 for Ganjil, 2 for Genap)
             $table->string('nama');
+            $table->enum('semester', ['Ganjil', 'Genap']);
+            $table->string('tahun_akademik'); // Will be set by the model
             $table->date('tgl_mulai');
             $table->date('tgl_selesai');
             $table->boolean('is_active')->default(false);
             $table->timestamps();
+            
+            // Add comment to explain kode format
+            $table->comment('kode format: YYYYS (S=1 for Ganjil, 2 for Genap)');
         });
     }
 

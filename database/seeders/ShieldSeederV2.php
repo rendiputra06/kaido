@@ -175,20 +175,45 @@ class ShieldSeederV2 extends Seeder
      */
     private function generateResourcePermissions(string $resource): array
     {
+        // Format resource name (convert multi-word resources to use ::)
+        $formattedResource = $this->formatResourceName($resource);
+        
         $basePermissions = [
-            "view_{$resource}",
-            "view_any_{$resource}",
-            "create_{$resource}",
-            "update_{$resource}",
-            "restore_{$resource}",
-            "restore_any_{$resource}",
-            "delete_{$resource}",
-            "delete_any_{$resource}",
-            "force_delete_{$resource}",
-            "force_delete_any_{$resource}",
+            "view_{$formattedResource}",
+            "view_any_{$formattedResource}",
+            "create_{$formattedResource}",
+            "update_{$formattedResource}",
+            "restore_{$formattedResource}",
+            "restore_any_{$formattedResource}",
+            "delete_{$formattedResource}",
+            "delete_any_{$formattedResource}",
+            "force_delete_{$formattedResource}",
+            "force_delete_any_{$formattedResource}",
         ];
 
         return $basePermissions;
+    }
+    
+    /**
+     * Format resource name to use :: for multi-word resources
+     * Example: program_studi becomes program::studi
+     */
+    private function formatResourceName(string $resource): string
+    {
+        $parts = explode('_', $resource);
+        
+        // If it's a single word, return as is
+        if (count($parts) <= 1) {
+            return $resource;
+        }
+        
+        // Take the first part as prefix
+        $prefix = array_shift($parts);
+        
+        // Join the remaining parts with ::
+        $suffix = implode('::', $parts);
+        
+        return $prefix . '::' . $suffix;
     }
 
     /**
