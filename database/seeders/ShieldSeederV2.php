@@ -94,7 +94,11 @@ class ShieldSeederV2 extends Seeder
                 'description' => 'Mahasiswa - Akses untuk akademik pribadi',
                 'resources' => [],
                 'pages' => [
-                    'mahasiswa_krs'
+                    'mahasiswa_krs',
+                    'page_khs',
+                    'page_transkrip',
+                    'page_presensi',
+                    'page_edom'
                 ],
                 'permissions' => [
                     'view', 'create_own_krs', 'update_own_krs', 'view_own_nilai',
